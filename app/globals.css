@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: 28 33 41;
+  --color-ink-soft: 44 51 64;
+  --color-ink-faint: 84 92 107;
+  --color-paper: 250 248 243;
+  --color-paper-dim: 241 237 227;
+  --color-paper-line: 228 223 210;
+  --color-amber: 226 163 61;
+  --color-amber-dark: 198 133 42;
+  --color-amber-light: 243 216 163;
+  --color-teal: 63 117 104;
+  --color-teal-dark: 46 90 80;
+  --color-teal-light: 207 227 221;
+  --color-rust: 193 80 46;
+  --color-rust-dark: 156 62 34;
+  --color-rust-light: 240 210 198;
+  --color-violet: 110 86 201;
+  --color-violet-dark: 86 66 166;
+  --color-violet-light: 223 216 245;
+
+  --card-bg: 255 254 251;
+  --card-border: var(--color-paper-line);
+  --card-fold: var(--color-paper-dim);
+  --dropzone-border: 207 199 178;
+  --dropzone-tint: 28 33 41;
+}
+
+.dark {
+  --color-ink: 240 238 232;
+  --color-ink-soft: 214 210 200;
+  --color-ink-faint: 158 152 140;
+  --color-paper: 22 21 19;
+  --color-paper-dim: 32 31 28;
+  --color-paper-line: 54 52 47;
+  --color-amber: 226 163 61;
+  --color-amber-dark: 240 184 96;
+  --color-amber-light: 58 46 21;
+  --color-teal: 110 176 158;
+  --color-teal-dark: 148 205 187;
+  --color-teal-light: 24 42 38;
+  --color-rust: 219 122 90;
+  --color-rust-dark: 236 150 120;
+  --color-rust-light: 46 27 21;
+  --color-violet: 165 148 232;
+  --color-violet-dark: 190 176 240;
+  --color-violet-light: 40 34 63;
+
+  --card-bg: 30 29 26;
+  --card-border: var(--color-paper-line);
+  --card-fold: 38 37 33;
+  --dropzone-border: 68 65 57;
+  --dropzone-tint: 240 238 232;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(var(--color-paper));
+  transition: background-color 0.15s ease;
+}
+
+::selection {
+  background-color: rgb(var(--color-amber));
+  color: rgb(var(--color-ink));
+}
+
+.dark ::selection {
+  color: rgb(22 21 19);
+}
+
+/* Signature element: a paper-stack card with a folded top-right corner.
+   Used for every tool card on the landing page. */
+.paper-stack {
+  position: relative;
+  background: rgb(var(--card-bg));
+  border: 1px solid rgb(var(--card-border));
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background-color 0.15s ease;
+}
+
+.paper-stack::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, rgb(var(--card-fold)) 50%, transparent 50%);
+  border-bottom: 1px solid rgb(var(--card-border));
+  border-left: 1px solid rgb(var(--card-border));
+}
+
+.paper-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: rgb(var(--card-bg));
+  border: 1px solid rgb(var(--card-border));
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  transform: translate(5px, 5px);
+  transition: transform 0.16s ease;
+}
+
+.paper-stack:hover {
+  transform: translate(-2px, -2px);
+}
+
+.paper-stack:hover::after {
+  transform: translate(7px, 7px);
+}
+
+/* The "feed slot" drop zone */
+.feed-slot {
+  position: relative;
+  border: 2px dashed rgb(var(--dropzone-border));
+  background: repeating-linear-gradient(
+    -45deg,
+    rgb(var(--dropzone-tint) / 0.015),
+    rgb(var(--dropzone-tint) / 0.015) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.feed-slot.is-active {
+  border-color: rgb(var(--color-amber));
+  background-color: rgb(var(--color-amber) / 0.06);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Shimmer loading skeleton, shown while a tool route's JS is loading */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(var(--color-paper-line) / 0.6);
+  border-radius: 6px;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--color-paper) / 0.55),
+    transparent
+  );
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    display: none;
+  }
+}
