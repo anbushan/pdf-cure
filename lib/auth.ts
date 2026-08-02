@@ -41,10 +41,22 @@ export async function buildAuthOptions(): Promise<AuthOptions> {
       },
     },
     events: {
-      /** The first person to ever sign in becomes admin — no env var needed to bootstrap the admin panel. */
+      /**
+       * The first person to ever sign in becomes admin — no env var needed to
+       * bootstrap the admin panel. If ADMIN_EMAIL is set, that address is
+       * promoted to admin on every sign-in instead (or in addition), so admin
+       * status doesn't depend on sign-in order — useful when testing with
+       * one Google account as both a regular user and the admin.
+       */
       async createUser({ user }) {
         const count = await prisma.user.count();
         if (count === 1 && user.id) {
+          await prisma.user.update({ where: { id: user.id }, data: { isAdmin: true } });
+        }
+      },
+      async signIn({ user }) {
+        const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+        if (adminEmail && user.email?.toLowerCase() === adminEmail && user.id) {
           await prisma.user.update({ where: { id: user.id }, data: { isAdmin: true } });
         }
       },

@@ -60,6 +60,11 @@ in becomes the site admin automatically** (no env var needed). From
 Drive picker keys, and Razorpay keys without touching `.env` again, and from
 `/admin → Pricing` adjust the Pro price and both plans' AI limits.
 
+Set `ADMIN_EMAIL` in `.env` to pin admin access to one address instead —
+that address is promoted to admin on every sign-in regardless of order,
+which is handy for testing as both a regular user and the admin with one
+Google account.
+
 ## Environment variables
 
 Full reference with inline setup steps lives in
@@ -138,7 +143,8 @@ renders fine without it, "Upgrade" just shows an error until this is done.
 ## Admin panel
 
 `/admin` — only reachable once signed in as an admin (the first-ever sign-in,
-or anyone an admin promotes directly in the database).
+whoever matches `ADMIN_EMAIL` if set, or anyone an admin promotes directly in
+the database).
 
 - **User information** — every account that's signed in, join date, plan,
   and AI usage (resets daily at midnight UTC).
