@@ -26,6 +26,8 @@ export const TOOLS: ToolMeta[] = [
   { slug: "translate", name: "Translate PDF", description: "Translate a PDF's text into another language.", category: "AI", status: "live", accent: "violet" },
   { slug: "ai-html-to-pdf", name: "AI HTML to PDF", description: "Clean up messy HTML and convert it to a polished PDF.", category: "AI", status: "live", accent: "violet" },
   { slug: "ai-pdf-to-html", name: "AI PDF to HTML", description: "Turn a PDF into clean, structured HTML you can publish.", category: "AI", status: "live", accent: "violet" },
+  { slug: "detect-plagiarism", name: "Detect Plagiarism", description: "AI writing analysis that flags passages that look unoriginal or copy-pasted.", category: "AI", status: "live", accent: "violet" },
+  { slug: "remove-background", name: "Image Background Remover", description: "Erase a photo's background in your browser — no upload, no account.", category: "AI", status: "live", accent: "violet" },
 
   // Organize
   { slug: "merge", name: "Merge PDF", description: "Combine PDFs in the order you want.", category: "Organize", status: "live", accent: "teal" },

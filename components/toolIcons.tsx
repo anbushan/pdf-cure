@@ -30,6 +30,8 @@ import {
   FileCode2,
   Archive,
   ScanLine,
+  FileSearch,
+  Eraser,
   type LucideIcon,
 } from "lucide-react";
 
@@ -39,6 +41,8 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   translate: Languages,
   "ai-html-to-pdf": Wand2,
   "ai-pdf-to-html": FileCode,
+  "detect-plagiarism": FileSearch,
+  "remove-background": Eraser,
   compare: GitCompare,
   merge: Combine,
   split: Scissors,

@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
+    "@imgly/background-removal": "^1.7.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@pdfsmaller/pdf-decrypt": "^1.0.0",
     "@pdfsmaller/pdf-encrypt": "^1.0.0",

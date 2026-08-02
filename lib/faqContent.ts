@@ -159,6 +159,16 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Is the generated HTML safe to open?", a: "The preview renders in a sandboxed iframe that blocks any scripts from running, so nothing in the AI-generated content can execute code in your browser — even by accident. The downloaded file is plain HTML with no scripts." },
     { q: "How is this different from PDF to Word?", a: "PDF to Word extracts plain text with no structure. This tool asks Claude to infer headings, paragraphs, lists, and tables from the extracted text and output proper semantic HTML — better suited for publishing to a website or CMS than a Word document would be." },
   ],
+  "detect-plagiarism": [
+    { q: "Does this search the internet or academic databases for matches?", a: "No — this isn't a match-against-the-internet checker like Turnitin or Copyscape. Claude reads the document's writing itself and flags passages with signals like sudden tone or vocabulary shifts, generic/templated phrasing, or a voice that's inconsistent with the rest of the text. Treat a flag as \"worth a second look,\" not proof of copying." },
+    { q: "Why did it flag something that isn't actually plagiarized?", a: "Natural writing variety — a technical section reading differently from an introduction, for instance — can look similar to the signals this tool watches for. It's a heuristic, not a certified report; use your judgment on anything flagged." },
+    { q: "Does this work on scanned PDFs?", a: "Only if the PDF has a selectable text layer. Purely scanned images with no OCR applied won't have any text to analyze." },
+  ],
+  "remove-background": [
+    { q: "Does this upload my photo anywhere?", a: "No — background removal runs entirely in your browser using an on-device AI model. The only network activity is a one-time download of that model (a few MB) the first time you use it, the same way the OCR tool's engine works; your photo itself never leaves your device." },
+    { q: "What file formats does this support?", a: "JPG, PNG, and WebP in; the result downloads as a PNG with a transparent background." },
+    { q: "Why does the first run take longer than expected?", a: "The AI model downloads once on first use and is cached by your browser after that — later uses on the same device are noticeably faster." },
+  ],
   "pdf-to-pdfa": [
     { q: "Does this guarantee full PDF/A (ISO 19005) compliance?", a: "No — this is a best-effort conversion. It embeds the standard PDF/A identification metadata and document info a validator looks for, but doesn't perform full archival validation such as verifying every font is embedded or attaching a color output profile. For a legally mandated archival submission, verify the result with a dedicated PDF/A validator first." },
     { q: "Will this change how my PDF looks?", a: "No — the page content itself isn't touched, only metadata is added. Visually the file is identical to the original." },

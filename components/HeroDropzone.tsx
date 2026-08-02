@@ -103,7 +103,7 @@ export default function HeroDropzone() {
 
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute -top-3 -right-3 hidden rounded-full bg-amber px-3 py-1 text-xs font-semibold text-ink shadow-card sm:flex items-center gap-1">
+      <div className="pointer-events-none absolute -top-3 -right-3 z-10 hidden rounded-full bg-amber px-3 py-1 text-xs font-semibold text-ink shadow-card sm:flex items-center gap-1">
         <Sparkles size={12} /> Quick access
       </div>
       <Dropzone
