@@ -40,18 +40,45 @@ NextAuth.js (Google provider) · Anthropic SDK · Razorpay
 ## Prerequisites
 
 - Node.js 18.18+ and npm
-- A Postgres database — any host works locally (see *Deploying to Vercel*
-  below for the one this project is set up for)
+- A Postgres database — see *Local Postgres setup* right below for a
+  from-scratch local one, or use any host (Neon, Supabase, a VPS, etc.)
 - A Google Cloud project (for sign-in, and optionally Drive import)
 - An Anthropic API key (only needed for the AI tools)
 - A Razorpay account (only needed to actually accept Pro payments — the
   pricing page works without it, "Upgrade" just errors until it's configured)
 
+## Local Postgres setup
+
+This is what's actually running on this machine — reproduce it fresh on
+another Mac with Homebrew:
+
+```bash
+brew install postgresql@16
+brew services start postgresql@16   # runs in the background, survives reboots
+createdb pdfcure                    # one database, owned by your macOS user
+```
+
+Homebrew's Postgres uses "trust" auth for local connections, so no
+password is needed — the connection string is just:
+
+```
+DATABASE_URL="postgresql://<your macOS username>@localhost:5432/pdfcure"
+```
+
+Put that in `.env`, then run `npm run db:migrate` (below) to create the
+schema. Useful commands going forward:
+
+```bash
+brew services stop postgresql@16    # stop it
+brew services list                  # check if it's running
+psql pdfcure                        # open a SQL shell against it
+```
+
 ## Quick start
 
 ```bash
 npm install                 # also runs `prisma generate` via postinstall
-cp .env.local.example .env  # then fill in the required values below, including a real DATABASE_URL
+cp .env.local.example .env  # then fill in the required values below, including DATABASE_URL
 npm run db:migrate          # applies the schema to that database (first run creates it: --name init)
 npm run dev                 # http://localhost:3000
 ```
