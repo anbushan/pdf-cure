@@ -9,6 +9,7 @@ import QuickSearch from "./QuickSearch";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import AuthButton from "./AuthButton";
+import NotificationBell from "./NotificationBell";
 import { useLanguage } from "./LanguageProvider";
 
 export default function Header() {
@@ -61,6 +62,7 @@ export default function Header() {
           <QuickSearch />
           <ThemeToggle />
           <LanguageSwitcher />
+          <NotificationBell />
           <AuthButton />
 
           {/* Hamburger — visible below lg */}

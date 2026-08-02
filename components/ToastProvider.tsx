@@ -2,9 +2,9 @@
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle2, XCircle, Loader2, X } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Bell, X } from "lucide-react";
 
-type ToastKind = "success" | "error" | "loading";
+type ToastKind = "success" | "error" | "loading" | "info";
 
 interface ToastItem {
   id: number;
@@ -15,6 +15,7 @@ interface ToastItem {
 interface ToastContextValue {
   success: (message: string) => void;
   error: (message: string) => void;
+  info: (message: string) => void;
   loading: (message: string) => number; // returns an id you can dismiss()
   dismiss: (id: number) => void;
 }
@@ -22,6 +23,7 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue>({
   success: () => {},
   error: () => {},
+  info: () => {},
   loading: () => -1,
   dismiss: () => {},
 });
@@ -53,6 +55,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const value: ToastContextValue = {
     success: (message) => push("success", message, 4000),
     error: (message) => push("error", message, 6000),
+    info: (message) => push("info", message, 5000),
     loading: (message) => push("loading", message),
     dismiss,
   };
@@ -67,11 +70,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               ? "bg-teal-light border-teal text-teal-dark"
               : t.kind === "error"
               ? "bg-rust-light border-rust text-rust-dark"
+              : t.kind === "info"
+              ? "bg-violet-light border-violet text-violet-dark"
               : "bg-white border-paper-line text-ink"
           }`}
         >
           {t.kind === "success" && <CheckCircle2 size={16} className="shrink-0" />}
           {t.kind === "error" && <XCircle size={16} className="shrink-0" />}
+          {t.kind === "info" && <Bell size={16} className="shrink-0" />}
           {t.kind === "loading" && <Loader2 size={16} className="shrink-0 animate-spin" />}
           <span className="flex-1">{t.message}</span>
           <button onClick={() => dismiss(t.id)} className="shrink-0 opacity-60 hover:opacity-100" aria-label="Dismiss">

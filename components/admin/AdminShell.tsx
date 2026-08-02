@@ -4,14 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Users, Settings, MessageSquarePlus, CreditCard, Tag, ScrollText, LogOut, Menu, X, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Users, Settings, MessageSquarePlus, CreditCard, Tag, ScrollText, Bell, LogOut, Menu, X, ExternalLink } from "lucide-react";
 import ConfirmDialog from "../ConfirmDialog";
 
 const NAV = [
-  { href: "/admin", label: "User information", icon: Users },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/users", label: "User information", icon: Users },
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquarePlus },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/pricing", label: "Pricing", icon: Tag },
+  { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/audit", label: "Audit logs", icon: ScrollText },
   { href: "/admin/settings", label: "Configuration", icon: Settings },
 ];

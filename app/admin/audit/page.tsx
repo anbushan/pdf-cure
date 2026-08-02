@@ -27,11 +27,17 @@ const ACTION_LABELS: Record<string, string> = {
   setting_updated: "Setting updated",
   admin_login: "Admin login",
   admin_granted: "Admin granted",
+  notification_created: "Notification created",
+  notification_updated: "Notification updated",
+  notification_deleted: "Notification deleted",
 };
 
 const ACTION_STYLES: Record<string, string> = {
   setting_updated: "bg-amber-light text-amber-dark",
   admin_login: "bg-teal-light text-teal-dark",
+  notification_created: "bg-violet-light text-violet-dark",
+  notification_updated: "bg-violet-light text-violet-dark",
+  notification_deleted: "bg-rust-light text-rust-dark",
   admin_granted: "bg-violet-light text-violet-dark",
 };
 
