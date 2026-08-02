@@ -8,6 +8,16 @@ export const SITE_URL = "https://pdfcure.app";
 export const SITE_NAME = "PDFCure";
 export const SITE_TAGLINE = "Quick Fix for Your PDFs";
 
+/**
+ * Kill switch for search engines — off by default, so a dev/staging/preview
+ * deployment is never accidentally crawled or indexed while it's still
+ * being tested. Set ENABLE_INDEXING=true (only on the real production
+ * deployment) once you're actually ready to go live; that flips the root
+ * layout's <meta name="robots">, robots.txt, and sitemap.xml all together
+ * — see app/robots.ts and app/sitemap.ts.
+ */
+export const INDEXING_ENABLED = process.env.ENABLE_INDEXING === "true";
+
 export function buildToolMetadata(slug: string): Metadata {
   const tool = getTool(slug);
   const override = TOOL_SEO_OVERRIDES[slug];

@@ -1,9 +1,14 @@
 import type { MetadataRoute } from "next";
 import { TOOLS } from "@/lib/toolsConfig";
 import { BLOG_POSTS } from "@/lib/blogPosts";
-import { SITE_URL } from "@/lib/pageMetadata";
+import { SITE_URL, INDEXING_ENABLED } from "@/lib/pageMetadata";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // Same kill switch as robots.ts — an empty sitemap on a dev/preview
+  // deployment has nothing for a search engine to find even if it ignores
+  // the disallow-all in robots.txt.
+  if (!INDEXING_ENABLED) return [];
+
   const toolEntries = TOOLS.filter((t) => t.status === "live").map((tool) => ({
     url: `${SITE_URL}/tools/${tool.slug}`,
     changeFrequency: "monthly" as const,

@@ -279,6 +279,12 @@ production.
    redirect URIs (Google Cloud Console → Credentials), alongside the
    `localhost:3000` one you already have for local dev.
 5. **Deploy.** Push to the branch Vercel is tracking, or run `vercel --prod`.
+6. **Go live for real** — the site ships `noindex` and an empty sitemap
+   until `ENABLE_INDEXING=true` is set (Project → Settings → Environment
+   Variables, **Production** environment only — never set it on Preview),
+   so nothing gets crawled while you're still testing the live deployment.
+   Flip it on when you're actually ready for Google to index the site,
+   then redeploy.
 
 A couple of things that only matter at Vercel's scale, already handled in
 the code: the four AI routes (`pdf-summarize`, `pdf-translate`, `pdf-chat`,

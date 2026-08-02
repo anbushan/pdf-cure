@@ -15,7 +15,7 @@ import { ToastProvider } from "@/components/ToastProvider";
 import CookieBanner from "@/components/CookieBanner";
 import ScrollToTop from "@/components/ScrollToTop";
 import FeedbackButton from "@/components/FeedbackButton";
-import { SITE_URL, SITE_NAME } from "@/lib/pageMetadata";
+import { SITE_URL, SITE_NAME, INDEXING_ENABLED } from "@/lib/pageMetadata";
 
 // Inter — same typeface used on nextjs.org alongside Geist; clean, geometric, excellent legibility
 const interDisplay = Inter({
@@ -49,6 +49,11 @@ export const metadata: Metadata = {
     "word to pdf", "pdf to word", "excel to pdf", "pdf to excel", "powerpoint to pdf", "pdf to powerpoint",
     "pdf to jpg", "jpg to pdf", "pdf converter", "pdf editor", "unlock pdf", "sign pdf",
   ],
+  // Off (noindex) until ENABLE_INDEXING=true — see lib/pageMetadata.ts.
+  // Every page inherits this unless it sets its own `robots`, which only
+  // /admin and the scan-to-pdf mobile page currently do (they stay
+  // noindex regardless, on purpose).
+  robots: INDEXING_ENABLED ? { index: true, follow: true } : { index: false, follow: false },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
