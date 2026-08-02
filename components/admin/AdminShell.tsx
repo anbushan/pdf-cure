@@ -4,11 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { Users, Settings, MessageSquarePlus, LogOut, Menu, X, ExternalLink } from "lucide-react";
+import { Users, Settings, MessageSquarePlus, CreditCard, Tag, LogOut, Menu, X, ExternalLink } from "lucide-react";
 
 const NAV = [
   { href: "/admin", label: "User information", icon: Users },
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquarePlus },
+  { href: "/admin/payments", label: "Payments", icon: CreditCard },
+  { href: "/admin/pricing", label: "Pricing", icon: Tag },
   { href: "/admin/settings", label: "Configuration", icon: Settings },
 ];
 

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Sparkle } from "lucide-react";
+import { effectivePlan } from "@/lib/aiUsage";
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
@@ -24,6 +25,7 @@ export default async function AdminUsersPage() {
         )}
         {users.map((user) => {
           const lastUsage = user.aiUsage[0];
+          const plan = effectivePlan(user);
           return (
             <div key={user.id} className="paper-stack flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3 min-w-0">
@@ -43,6 +45,11 @@ export default async function AdminUsersPage() {
                         <ShieldCheck size={11} /> Admin
                       </span>
                     )}
+                    {plan === "pro" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-light px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-dark">
+                        <Sparkle size={11} /> Pro
+                      </span>
+                    )}
                   </div>
                   <p className="truncate text-xs text-ink-faint">{user.email}</p>
                 </div>
@@ -52,6 +59,14 @@ export default async function AdminUsersPage() {
                 <div>
                   <p className="font-medium text-ink">Joined</p>
                   <p>{user.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-ink">Plan</p>
+                  <p>
+                    {plan === "pro" && user.planExpiresAt
+                      ? `Pro until ${user.planExpiresAt.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                      : "Free"}
+                  </p>
                 </div>
                 <div>
                   <p className="font-medium text-ink">AI actions used</p>

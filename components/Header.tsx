@@ -25,6 +25,7 @@ export default function Header() {
     { href: "/#convert",  label: t("catConvert"),  className: "text-ink-faint hover:text-ink" },
     { href: "/#edit",     label: t("catEdit"),     className: "text-ink-faint hover:text-ink" },
     { href: "/#security", label: t("catSecurity"), className: "text-ink-faint hover:text-ink" },
+    { href: "/pricing",   label: "Pricing",         className: "text-ink-faint hover:text-ink" },
     { href: "/blog",      label: t("blog"),        className: "text-ink-faint hover:text-ink" },
     { href: "/features",  label: t("features"),    className: "text-ink-faint hover:text-ink" },
   ];

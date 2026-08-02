@@ -6,7 +6,7 @@ import { checkAiAccess, recordAiUsage } from "@/lib/requireAiAccess";
 const MAX_CHARS = 50000;
 
 export async function POST(req: NextRequest) {
-  const access = await checkAiAccess();
+  const access = await checkAiAccess("Translate PDF");
   if (!access.ok) return access.response;
 
   try {

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSession } from "./getSession";
-import { getAiUsageStatus, tryConsumeAiUsage } from "./aiUsage";
+import { getAiUsageStatus, recordAiUsage as recordUsage } from "./aiUsage";
 
 /**
  * Pre-flight check for an AI route: must be signed in, and must not have
- * already used today's one AI action. Checked (not consumed) here so a
- * failed Anthropic call below doesn't burn the user's daily quota —
- * recordAiUsage() is what actually claims it, called only after success.
+ * already exhausted today's quota for this feature. Checked (not consumed)
+ * here so a failed Anthropic call below doesn't burn it — recordAiUsage()
+ * is what actually claims it, called only after a successful response.
  */
-export async function checkAiAccess(): Promise<{ ok: true; userId: string } | { ok: false; response: NextResponse }> {
+export async function checkAiAccess(feature: string): Promise<{ ok: true; userId: string } | { ok: false; response: NextResponse }> {
   const session = await getSession();
   if (!session?.user) {
     return {
@@ -16,20 +16,17 @@ export async function checkAiAccess(): Promise<{ ok: true; userId: string } | { 
       response: NextResponse.json({ error: "Sign in with Google to use this AI tool." }, { status: 401 }),
     };
   }
-  const status = await getAiUsageStatus(session.user.id);
+  const status = await getAiUsageStatus(session.user.id, feature);
   if (!status.available) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "You've already used your one AI action for today. It resets at midnight UTC." },
-        { status: 429 }
-      ),
-    };
+    const message =
+      status.plan === "pro"
+        ? `You've used all ${status.limit} of today's actions for this tool. It resets at midnight UTC.`
+        : "You've already used your one AI action for today. Upgrade to Pro for a much higher daily limit, or come back tomorrow.";
+    return { ok: false, response: NextResponse.json({ error: message, plan: status.plan }, { status: 429 }) };
   }
   return { ok: true, userId: session.user.id };
 }
 
-/** Call once the AI response has actually been generated, to claim today's quota. */
 export async function recordAiUsage(userId: string, feature: string): Promise<void> {
-  await tryConsumeAiUsage(userId, feature);
+  await recordUsage(userId, feature);
 }

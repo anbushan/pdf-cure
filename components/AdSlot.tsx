@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 
 interface AdSlotProps {
   slot: string;
@@ -20,15 +21,26 @@ interface AdSlotProps {
  * real test ads without an approved account, and faking a client ID
  * against their real script would violate AdSense policy, so this
  * renders a clearly-labeled mock instead of a real ad request.
+ *
+ * Also renders nothing for Pro accounts (see lib/aiUsage.ts / the Pro
+ * plan on /pricing) — no ads is one of the two things Pro pays for.
  */
 export default function AdSlot({ slot, minHeight = 100, format = "auto", className = "" }: AdSlotProps) {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID;
   const demoMode = process.env.NEXT_PUBLIC_ADS_DEMO_MODE === "true";
+  const { data: session, status: sessionStatus } = useSession();
+  const sessionLoading = sessionStatus === "loading";
+  const isPro = session?.user?.plan === "pro";
   const ref = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
 
   useEffect(() => {
-    if (!client || demoMode || pushed.current) return;
+    // Wait for the session to resolve before ever pushing an ad — plan
+    // isn't known yet while loading, and defaulting to "not pro" here
+    // would push an ad into the `ins` element just before a Pro session
+    // resolves and this component unmounts it, which AdSense's own
+    // script then errors on ("already have ads in them").
+    if (!client || demoMode || isPro || sessionLoading || pushed.current) return;
     try {
       // @ts-expect-error - adsbygoogle is injected by the AdSense script
       (window.adsbygoogle = window.adsbygoogle || []).push({});
@@ -36,7 +48,9 @@ export default function AdSlot({ slot, minHeight = 100, format = "auto", classNa
     } catch {
       // AdSense script hasn't loaded yet, or was blocked — fail silently.
     }
-  }, [client, demoMode]);
+  }, [client, demoMode, isPro, sessionLoading]);
+
+  if (isPro) return null;
 
   if (demoMode) {
     return (

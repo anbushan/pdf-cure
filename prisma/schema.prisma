@@ -21,9 +21,16 @@ model User {
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
 
+  /// "free" or "pro" — see lib/plan.ts for the limits each implies.
+  plan                   String    @default("free")
+  planExpiresAt          DateTime?
+  razorpayCustomerId     String?
+  razorpaySubscriptionId String?   @unique
+
   accounts Account[]
   sessions Session[]
   aiUsage  AiUsage[]
+  payments Payment[]
 }
 
 model Account {
@@ -64,17 +71,21 @@ model VerificationToken {
 
 // --- App-specific ---
 
-/// One row per user per calendar day (UTC) they used an AI feature.
+/// One row per successful AI call. Quota is enforced by counting rows for
+/// (userId, usedOn [, feature]) at request time — see lib/aiUsage.ts. Free
+/// accounts are capped by a total across every feature; Pro accounts are
+/// capped per feature, so this can't be a single unique row per user/day
+/// the way it could when there was only one tier.
 model AiUsage {
-  id       String   @id @default(cuid())
-  userId   String
-  feature  String
-  usedOn   String // YYYY-MM-DD (UTC)
-  usedAt   DateTime @default(now())
+  id      String   @id @default(cuid())
+  userId  String
+  feature String
+  usedOn  String // YYYY-MM-DD (UTC)
+  usedAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, usedOn])
+  @@index([userId, usedOn])
 }
 
 /// Admin-editable key/value settings that override env vars at runtime
@@ -97,4 +108,28 @@ model Feedback {
   email     String?
   page      String?
   createdAt DateTime @default(now())
+}
+
+/// One row per Razorpay payment event (subscription charge, one-off
+/// failure, etc.) — written from both the checkout-success verify call
+/// and the webhook, so it's the source of truth for the admin Payments
+/// tab even if a user closes the tab mid-checkout and only the webhook
+/// fires.
+model Payment {
+  id                     String   @id @default(cuid())
+  userId                 String
+  razorpayPaymentId      String?  @unique
+  razorpayOrderId        String?
+  razorpaySubscriptionId String?
+  amount                 Int // smallest currency unit (paise for INR)
+  currency               String   @default("INR")
+  status                 String // created | authorized | captured | failed | refunded
+  plan                   String   @default("pro")
+  notes                  String? // free-text, e.g. the raw event type for debugging
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

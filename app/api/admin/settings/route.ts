@@ -2,7 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/requireAdmin";
 import { getAllSettingsForAdmin, setSetting, SETTING_KEYS, type SettingKey } from "@/lib/settings";
 
-const SECRET_KEYS: SettingKey[] = ["ANTHROPIC_API_KEY", "GOOGLE_CLIENT_SECRET"];
+const SECRET_KEYS: SettingKey[] = ["ANTHROPIC_API_KEY", "GOOGLE_CLIENT_SECRET", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"];
+
+// RAZORPAY_PLAN_ID/RAZORPAY_PLAN_ID_PRICE are written by the app itself
+// (lib/razorpay.ts) to cache the current Razorpay Plan — not meant to be
+// hand-edited, so neither admin screen exposes them by default.
+const INTERNAL_KEYS: SettingKey[] = ["RAZORPAY_PLAN_ID", "RAZORPAY_PLAN_ID_PRICE"];
 
 function mask(value: string) {
   if (!value) return "";
@@ -10,11 +15,16 @@ function mask(value: string) {
   return `••••••••${value.slice(-4)}`;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const admin = await requireAdminSession();
   if (!admin.ok) return admin.response;
 
-  const settings = await getAllSettingsForAdmin();
+  const keysParam = req.nextUrl.searchParams.get("keys");
+  const keys = keysParam
+    ? (keysParam.split(",").filter((k) => SETTING_KEYS.includes(k as SettingKey)) as SettingKey[])
+    : SETTING_KEYS.filter((k) => !INTERNAL_KEYS.includes(k));
+
+  const settings = await getAllSettingsForAdmin(keys);
   return NextResponse.json(
     settings.map((s) => ({
       ...s,

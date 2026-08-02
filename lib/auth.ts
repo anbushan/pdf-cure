@@ -30,8 +30,11 @@ export async function buildAuthOptions(): Promise<AuthOptions> {
     callbacks: {
       async session({ session, user }) {
         if (session.user) {
+          const u = user as { isAdmin?: boolean; plan?: string; planExpiresAt?: Date | null };
           session.user.id = user.id;
-          session.user.isAdmin = (user as { isAdmin?: boolean }).isAdmin ?? false;
+          session.user.isAdmin = u.isAdmin ?? false;
+          const isPro = u.plan === "pro" && !!u.planExpiresAt && u.planExpiresAt.getTime() > Date.now();
+          session.user.plan = isPro ? "pro" : "free";
         }
         return session;
       },

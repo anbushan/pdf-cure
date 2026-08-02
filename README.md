@@ -2,35 +2,43 @@
 
 Free PDF tools that run entirely in your browser — merge, split, compress, sign,
 convert, and more, with nothing uploaded to a server. A small set of AI tools
-(Summarize, Ask your PDF, Translate) are the exception: they require a Google
-sign-in and are limited to one use per account per day.
+(Summarize, Ask your PDF, Translate, AI HTML↔PDF) are the exception: they
+require a Google sign-in and a daily quota — free accounts get one AI action
+a day total, Pro accounts (₹499/mo by default, admin-editable) get 20 per day
+*per tool* and no ads.
 
 ## Features
 
 - **30+ client-side PDF tools** — merge, split, compress, rotate, crop, sign,
   redact, protect/unlock, watermark, page numbers, and format conversions
   (Word/Excel/PowerPoint/JPG/HTML ↔ PDF, OCR, repair). All processing happens
-  in the browser; files never leave the device.
+  in the browser; files never leave the device. Free and unlimited regardless
+  of plan.
 - **AI tools** (Summarize, Ask your PDF, Translate PDF, AI HTML↔PDF) — send
   extracted text (not the file) to Claude via the Anthropic API. Gated behind
-  Google sign-in, one use per account per day.
+  Google sign-in with a daily quota that depends on plan.
+- **Pro plan** (`/pricing`) — Razorpay subscription that removes ads and
+  raises the AI quota. Fully self-serve: upgrade, cancel anytime (access
+  continues until the paid period ends).
 - **Google Drive import** — pick a file straight from Drive instead of local
   upload, available on every tool once configured.
-- **Admin panel** (`/admin`) — signed-in-user list, feedback inbox, and a
-  settings screen for API keys/OAuth credentials that takes effect immediately
-  with no redeploy.
+- **Admin panel** (`/admin`) — signed-in-user list, feedback inbox, payment
+  history, and settings screens (technical credentials + business
+  price/limits) that take effect immediately with no redeploy.
 - Multi-language UI (26 locales), PWA installable, optional AdSense/GA.
 
 ## Tech stack
 
 Next.js 14 (App Router) · TypeScript · Tailwind CSS · Prisma + SQLite ·
-NextAuth.js (Google provider) · Anthropic SDK
+NextAuth.js (Google provider) · Anthropic SDK · Razorpay
 
 ## Prerequisites
 
 - Node.js 18.18+ and npm
 - A Google Cloud project (for sign-in, and optionally Drive import)
 - An Anthropic API key (only needed for the AI tools)
+- A Razorpay account (only needed to actually accept Pro payments — the
+  pricing page works without it, "Upgrade" just errors until it's configured)
 
 ## Quick start
 
@@ -43,8 +51,9 @@ npm run dev                 # http://localhost:3000
 
 Sign in with Google once the app is running — **the first person to ever sign
 in becomes the site admin automatically** (no env var needed). From
-`/admin → Configuration` that admin can then set the Anthropic API key and
-Drive picker keys without touching `.env` again.
+`/admin → Configuration` that admin can then set the Anthropic API key,
+Drive picker keys, and Razorpay keys without touching `.env` again, and from
+`/admin → Pricing` adjust the Pro price and both plans' AI limits.
 
 ## Environment variables
 
@@ -59,8 +68,9 @@ The short version:
 | `NEXTAUTH_URL` | Yes | The site's own URL, e.g. `http://localhost:3000` in dev. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Yes, to sign in at all | OAuth credentials — see below. |
 | `ANTHROPIC_API_KEY` | Only for AI tools | Can be set later from `/admin` instead. |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `RAZORPAY_WEBHOOK_SECRET` | Only to accept payments | Can be set later from `/admin` instead — see below. |
 | `RESEND_API_KEY`, `CONTACT_TO_EMAIL` | Optional | Emails a copy of feedback/contact submissions. Feedback is always saved to the database regardless. |
-| `NEXT_PUBLIC_ADSENSE_*`, `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional | Ads/analytics. Leave unset to stay ad-free and tracking-free. |
+| `NEXT_PUBLIC_ADSENSE_*`, `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Optional | Ads/analytics. Leave unset to stay ad-free and tracking-free. Not shown to Pro accounts regardless. |
 | `NEXT_PUBLIC_GOOGLE_API_KEY`, `NEXT_PUBLIC_GOOGLE_APP_ID` | Optional | Google Drive file picker. Can also be set from `/admin`. |
 
 ### Setting up Google sign-in (do this carefully — the redirect URI is the part people miss)
@@ -96,26 +106,63 @@ cause of sign-in breaking:
    the numeric project number (shown on the project's dashboard) for
    `NEXT_PUBLIC_GOOGLE_APP_ID`.
 
+### Setting up Razorpay (Pro plan payments)
+
+Only needed if you actually want to accept payments — the pricing page
+renders fine without it, "Upgrade" just shows an error until this is done.
+
+1. [dashboard.razorpay.com](https://dashboard.razorpay.com) → sign up →
+   **Settings → API Keys** → generate a key pair. Use **test mode** while
+   developing; Razorpay's test mode needs no real card and has its own test
+   key pair (switch the toggle in the dashboard).
+2. Put those in `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` (`.env`, or later
+   from `/admin → Configuration`).
+3. **Settings → Webhooks → Add New Webhook**:
+   - URL: `https://yourdomain.com/api/razorpay/webhook`
+   - Active events: `subscription.charged`, `subscription.halted`,
+     `payment.failed`, `subscription.cancelled`
+   - Set a secret there and copy it into `RAZORPAY_WEBHOOK_SECRET`.
+   - In local dev, Razorpay can't reach `localhost` — either skip this
+     during local testing (the checkout-success callback alone is enough to
+     grant access for a first test) or tunnel with something like `ngrok`
+     and use that URL instead.
+4. That's it — the app creates its own Razorpay **Plan** automatically the
+   first time anyone upgrades, priced at whatever `/admin → Pricing` says.
+   You don't need to create a Plan by hand in the Razorpay dashboard.
+
 ## Admin panel
 
 `/admin` — only reachable once signed in as an admin (the first-ever sign-in,
 or anyone an admin promotes directly in the database).
 
-- **User information** — every account that's signed in, join date, and AI
-  usage (resets daily at midnight UTC).
-- **Feedback** — every submission from the feedback widget, sortable and
+- **User information** — every account that's signed in, join date, plan,
+  and AI usage (resets daily at midnight UTC).
+- **Feedback** — every submission from the feedback widget, sortable,
   searchable, paginated. Saved to the database independently of whether
   email delivery is configured.
-- **Configuration** — API keys and OAuth credentials, stored in the database
-  and read in preference to `.env`. Changes apply immediately, no redeploy.
-  Secrets are masked after saving (only the last 4 characters are shown).
+- **Payments** — every Razorpay payment event (checkout confirmations and
+  webhook events), sortable, searchable, filterable by status, paginated.
+- **Pricing** — the Pro plan's monthly price, and the daily AI-action limit
+  for each plan. Changing the price creates a new Razorpay Plan for future
+  subscribers; existing subscribers keep their original price.
+- **Configuration** — technical credentials (API keys, OAuth, Razorpay keys),
+  stored in the database and read in preference to `.env`. Changes apply
+  immediately, no redeploy. Secrets are masked after saving (only the last 4
+  characters are shown).
 
 ## AI daily limit
 
-Each signed-in account gets **one AI action per day, total, across all four
-AI tools** (not one per tool) — asking a question via "Ask your PDF" and then
-trying to also summarize a document the same day will hit the limit on the
-second attempt. The quota resets at midnight UTC and is only consumed after a
+Depends on plan (numbers below are the defaults — both are editable from
+`/admin → Pricing`):
+
+- **Free** — **one AI action per day, total, across all four AI tools** (not
+  one per tool) — asking a question via "Ask your PDF" and then trying to
+  also summarize a document the same day hits the limit on the second
+  attempt.
+- **Pro** — **20 AI actions per day, per tool** — Summarize, Ask, Translate,
+  and AI HTML/PDF each get their own separate pool of 20.
+
+Either way, the quota resets at midnight UTC and is only consumed after a
 successful response, so a failed request (bad API key, network error, etc.)
 doesn't burn it.
 

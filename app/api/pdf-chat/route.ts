@@ -11,7 +11,7 @@ interface ChatTurn {
 }
 
 export async function POST(req: NextRequest) {
-  const access = await checkAiAccess();
+  const access = await checkAiAccess("Ask your PDF");
   if (!access.ok) return access.response;
 
   try {
