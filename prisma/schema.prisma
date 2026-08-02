@@ -159,3 +159,21 @@ model ScanImage {
 
   session ScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
+
+/// Trail of admin-relevant actions (settings/pricing changes, admin
+/// sign-ins, admin grants) — see lib/auditLog.ts. Not a full accounting of
+/// every request in the app, just the actions that change shared
+/// configuration or touch access control, which is what an admin actually
+/// needs to be able to answer "who changed this, and when."
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorEmail String
+  actorName  String?
+  action     String
+  target     String?
+  detail     String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([action])
+}

@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
 import { getSettings } from "./settings";
+import { logAudit } from "./auditLog";
 
 /**
  * Auth config is built per-request (not a static export) so that Google
@@ -55,9 +56,23 @@ export async function buildAuthOptions(): Promise<AuthOptions> {
         }
       },
       async signIn({ user }) {
+        if (!user.id) return;
+        let isAdmin = (await prisma.user.findUnique({ where: { id: user.id }, select: { isAdmin: true } }))?.isAdmin ?? false;
+
         const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-        if (adminEmail && user.email?.toLowerCase() === adminEmail && user.id) {
+        if (!isAdmin && adminEmail && user.email?.toLowerCase() === adminEmail) {
           await prisma.user.update({ where: { id: user.id }, data: { isAdmin: true } });
+          isAdmin = true;
+          await logAudit({
+            actorEmail: user.email ?? "unknown",
+            actorName: user.name,
+            action: "admin_granted",
+            detail: "Promoted via ADMIN_EMAIL",
+          });
+        }
+
+        if (isAdmin) {
+          await logAudit({ actorEmail: user.email ?? "unknown", actorName: user.name, action: "admin_login" });
         }
       },
     },

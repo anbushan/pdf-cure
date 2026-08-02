@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { LogOut, Sparkle, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { useToast } from "./ToastProvider";
+import ConfirmDialog from "./ConfirmDialog";
 
 function GoogleMark() {
   return (
@@ -41,6 +42,7 @@ export default function AuthButton() {
   const { data: session, status, update } = useSession();
   const toast = useToast();
   const [open, setOpen] = useState(false);
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -152,7 +154,7 @@ export default function AuthButton() {
 
           <div className="p-2">
             <button
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => setConfirmingLogout(true)}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-faint hover:bg-paper-dim hover:text-ink transition-colors"
             >
               <LogOut size={15} /> Log out
@@ -193,6 +195,18 @@ export default function AuthButton() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmingLogout}
+        title="Log out?"
+        message="You'll need to sign in with Google again to use the AI tools or manage your plan."
+        confirmLabel="Log out"
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          signOut({ callbackUrl: "/" });
+        }}
+        onCancel={() => setConfirmingLogout(false)}
+      />
     </div>
   );
 }

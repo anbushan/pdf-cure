@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/requireAdmin";
-import { getAllSettingsForAdmin, setSetting, SETTING_KEYS, type SettingKey } from "@/lib/settings";
+import { getAllSettingsForAdmin, getSetting, setSetting, SETTING_KEYS, type SettingKey } from "@/lib/settings";
+import { logAudit } from "@/lib/auditLog";
 
 const SECRET_KEYS: SettingKey[] = ["ANTHROPIC_API_KEY", "GOOGLE_CLIENT_SECRET", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"];
 
@@ -42,6 +43,21 @@ export async function POST(req: NextRequest) {
   if (!key || !SETTING_KEYS.includes(key as SettingKey)) {
     return NextResponse.json({ error: "Unknown setting key." }, { status: 400 });
   }
-  await setSetting(key as SettingKey, (value ?? "").trim());
+  const typedKey = key as SettingKey;
+  const isSecret = SECRET_KEYS.includes(typedKey);
+  const oldValue = await getSetting(typedKey);
+  const newValue = (value ?? "").trim();
+  await setSetting(typedKey, newValue);
+
+  await logAudit({
+    actorEmail: admin.session.user.email ?? "unknown",
+    actorName: admin.session.user.name,
+    action: "setting_updated",
+    target: typedKey,
+    detail: isSecret
+      ? `${oldValue ? "was set" : "was empty"} → ${newValue ? "set" : "cleared"}`
+      : `${oldValue || "(empty)"} → ${newValue || "(empty)"}`,
+  });
+
   return NextResponse.json({ ok: true });
 }
