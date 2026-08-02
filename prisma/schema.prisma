@@ -85,3 +85,16 @@ model Setting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+/// Submissions from the feedback widget (components/FeedbackButton.tsx).
+/// Email is optional — feedback doesn't require one. Saved here as the
+/// source of truth for the admin Feedback tab; emailing it out (see
+/// lib/sendEmail.ts) is best-effort on top of that, not a replacement.
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  email     String?
+  page      String?
+  createdAt DateTime @default(now())
+}

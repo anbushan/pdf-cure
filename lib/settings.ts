@@ -45,17 +45,30 @@ export function invalidateSettingsCache() {
   cache = null;
 }
 
+/**
+ * Env fallback for a key, including a couple of aliases for values that
+ * used to live under a different name before the admin-settings system
+ * existed — GOOGLE_CLIENT_ID in particular used to only be needed
+ * client-side (for the Drive picker) so it was NEXT_PUBLIC_-prefixed;
+ * NextAuth now also needs it server-side under the bare name.
+ */
+function envValue(key: SettingKey): string | undefined {
+  if (process.env[key]) return process.env[key];
+  if (key === "GOOGLE_CLIENT_ID") return process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || undefined;
+  return undefined;
+}
+
 /** DB value if set, else the matching env var, else undefined. */
 export async function getSetting(key: SettingKey): Promise<string | undefined> {
   const all = await loadAll();
-  return all[key] || process.env[key] || undefined;
+  return all[key] || envValue(key) || undefined;
 }
 
 export async function getSettings(keys: SettingKey[]): Promise<Partial<Record<SettingKey, string>>> {
   const all = await loadAll();
   const out: Partial<Record<SettingKey, string>> = {};
   for (const key of keys) {
-    out[key] = all[key] || process.env[key] || undefined;
+    out[key] = all[key] || envValue(key) || undefined;
   }
   return out;
 }
@@ -67,7 +80,8 @@ export async function getAllSettingsForAdmin(): Promise<
   const all = await loadAll();
   return SETTING_KEYS.map((key) => {
     if (all[key]) return { key, value: all[key]!, source: "database" as const };
-    if (process.env[key]) return { key, value: process.env[key]!, source: "env" as const };
+    const env = envValue(key);
+    if (env) return { key, value: env, source: "env" as const };
     return { key, value: "", source: "unset" as const };
   });
 }
