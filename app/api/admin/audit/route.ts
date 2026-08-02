@@ -24,10 +24,10 @@ export async function GET(req: NextRequest) {
     ...(q
       ? {
           OR: [
-            { actorEmail: { contains: q } },
-            { actorName: { contains: q } },
-            { target: { contains: q } },
-            { detail: { contains: q } },
+            { actorEmail: { contains: q, mode: "insensitive" } },
+            { actorName: { contains: q, mode: "insensitive" } },
+            { target: { contains: q, mode: "insensitive" } },
+            { detail: { contains: q, mode: "insensitive" } },
           ],
         }
       : {}),

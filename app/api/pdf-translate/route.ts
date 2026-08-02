@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSetting } from "@/lib/settings";
 import { checkAiAccess, recordAiUsage } from "@/lib/requireAiAccess";
 
+// Default Vercel function timeout (10s on Hobby) is too tight for a
+// Claude round-trip on a long document; this raises the ceiling where the
+// plan allows it (Hobby caps at 10s regardless, Pro honors up to 60s here).
+export const maxDuration = 60;
+
 const MAX_CHARS = 50000;
 
 export async function POST(req: NextRequest) {

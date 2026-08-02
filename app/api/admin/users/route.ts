@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
     ...(role === "admin" ? { isAdmin: true } : role === "member" ? { isAdmin: false } : {}),
     ...(q
       ? {
-          OR: [{ email: { contains: q } }, { name: { contains: q } }],
+          OR: [{ email: { contains: q, mode: "insensitive" } }, { name: { contains: q, mode: "insensitive" } }],
         }
       : {}),
   };

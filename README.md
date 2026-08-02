@@ -34,12 +34,14 @@ a day total, Pro accounts (₹499/mo by default, admin-editable) get 20 per day
 
 ## Tech stack
 
-Next.js 14 (App Router) · TypeScript · Tailwind CSS · Prisma + SQLite ·
+Next.js 14 (App Router) · TypeScript · Tailwind CSS · Prisma + PostgreSQL ·
 NextAuth.js (Google provider) · Anthropic SDK · Razorpay
 
 ## Prerequisites
 
 - Node.js 18.18+ and npm
+- A Postgres database — any host works locally (see *Deploying to Vercel*
+  below for the one this project is set up for)
 - A Google Cloud project (for sign-in, and optionally Drive import)
 - An Anthropic API key (only needed for the AI tools)
 - A Razorpay account (only needed to actually accept Pro payments — the
@@ -49,8 +51,8 @@ NextAuth.js (Google provider) · Anthropic SDK · Razorpay
 
 ```bash
 npm install                 # also runs `prisma generate` via postinstall
-cp .env.local.example .env  # then fill in the required values below
-npm run db:migrate          # creates prisma/dev.db and applies the schema
+cp .env.local.example .env  # then fill in the required values below, including a real DATABASE_URL
+npm run db:migrate          # applies the schema to that database (first run creates it: --name init)
 npm run dev                 # http://localhost:3000
 ```
 
@@ -73,7 +75,7 @@ The short version:
 
 | Variable | Required? | Purpose |
 |---|---|---|
-| `DATABASE_URL` | Yes | SQLite file path, e.g. `file:./dev.db`. Already set in the example file. |
+| `DATABASE_URL` | Yes | Postgres connection string. On Vercel this is injected automatically once you provision Storage → Postgres — see *Deploying to Vercel* below. |
 | `NEXTAUTH_SECRET` | Yes | Encrypts session cookies. Generate with `openssl rand -base64 32`. |
 | `NEXTAUTH_URL` | Yes | The site's own URL, e.g. `http://localhost:3000` in dev. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Yes, to sign in at all | OAuth credentials — see below. |
@@ -216,16 +218,49 @@ account-aware UI to a page that needs to stay fast, prefer resolving
 session/plan state server-side (`lib/getSession.ts`) over a client fetch
 where possible.
 
-## Deployment notes
+## Deploying to Vercel
 
-This uses SQLite via a local file (`prisma/dev.db`), which needs a host with
-a persistent, writable disk and a single running instance — a VPS, Railway,
-Render, Fly.io, etc. all work fine. **It will not work reliably on Vercel or
-other serverless platforms**, where each function invocation can run on a
-different, ephemeral instance with no shared disk. If you're deploying to
-serverless, swap the Prisma datasource to a hosted Postgres (Vercel Postgres,
-Supabase, Neon, etc.) — the schema and code don't otherwise change, just the
-`datasource` provider in `prisma/schema.prisma` and `DATABASE_URL`.
+The Prisma datasource is Postgres (`prisma/schema.prisma`), which is what
+Vercel's serverless functions need — they run on ephemeral, non-shared
+filesystems, so a file-based database like SQLite can't work there. `npm run
+build` runs `prisma migrate deploy` before `next build`, so every deploy
+applies any pending migrations automatically; you don't run that by hand in
+production.
+
+1. **Provision the database** — in the Vercel dashboard, open the project →
+   **Storage** tab → **Create Database** → **Postgres** (Neon-backed). This
+   injects `DATABASE_URL` and a few `POSTGRES_*` variants into the project's
+   env vars automatically; you only need `DATABASE_URL`, the rest can stay
+   unused.
+2. **One-time schema setup** — before the first deploy, run the initial
+   migration against that new database from your machine so the migration
+   files exist in the repo (Vercel's build only *applies* migrations, it
+   doesn't generate them):
+   ```bash
+   DATABASE_URL="<paste the Neon connection string>" npx prisma migrate dev --name init
+   git add prisma/migrations && git commit -m "Add initial Postgres migration"
+   ```
+3. **Set the rest of the environment variables** — Project → Settings →
+   Environment Variables. At minimum: `NEXTAUTH_SECRET` (generate with
+   `openssl rand -base64 32`), `NEXTAUTH_URL` (your production URL, e.g.
+   `https://yourdomain.com`), `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+   Everything else (Anthropic key, Razorpay keys, Drive picker keys,
+   AdSense/GA IDs) can be set later from `/admin → Configuration` instead —
+   see *Environment variables* above.
+4. **Update the Google OAuth client** — add
+   `https://yourdomain.com/api/auth/callback/google` to its Authorized
+   redirect URIs (Google Cloud Console → Credentials), alongside the
+   `localhost:3000` one you already have for local dev.
+5. **Deploy.** Push to the branch Vercel is tracking, or run `vercel --prod`.
+
+A couple of things that only matter at Vercel's scale, already handled in
+the code: the four AI routes (`pdf-summarize`, `pdf-translate`, `pdf-chat`,
+`ai-html-to-pdf`, `ai-pdf-to-html`) each set `export const maxDuration = 60`
+since Claude can take longer than Vercel's 10-second default on a long
+document (Hobby plan still hard-caps at 10s regardless — this only helps
+on Pro or above); and every admin/account list's search filter uses
+`mode: "insensitive"`, since Postgres's `contains` is case-sensitive by
+default where SQLite's wasn't.
 
 ## Scripts
 

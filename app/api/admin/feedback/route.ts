@@ -21,10 +21,10 @@ export async function GET(req: NextRequest) {
   const where: Prisma.FeedbackWhereInput = q
     ? {
         OR: [
-          { message: { contains: q } },
-          { email: { contains: q } },
-          { type: { contains: q } },
-          { page: { contains: q } },
+          { message: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+          { type: { contains: q, mode: "insensitive" } },
+          { page: { contains: q, mode: "insensitive" } },
         ],
       }
     : {};

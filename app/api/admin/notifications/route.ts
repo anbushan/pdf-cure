@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const where: Prisma.NotificationWhereInput = {
     ...(type ? { type } : {}),
     ...(active ? { active: active === "true" } : {}),
-    ...(q ? { OR: [{ title: { contains: q } }, { body: { contains: q } }] } : {}),
+    ...(q ? { OR: [{ title: { contains: q, mode: "insensitive" } }, { body: { contains: q, mode: "insensitive" } }] } : {}),
   };
 
   const [rows, total] = await Promise.all([

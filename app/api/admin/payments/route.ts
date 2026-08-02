@@ -24,10 +24,10 @@ export async function GET(req: NextRequest) {
     ...(q
       ? {
           OR: [
-            { razorpayPaymentId: { contains: q } },
-            { razorpaySubscriptionId: { contains: q } },
-            { user: { email: { contains: q } } },
-            { user: { name: { contains: q } } },
+            { razorpayPaymentId: { contains: q, mode: "insensitive" } },
+            { razorpaySubscriptionId: { contains: q, mode: "insensitive" } },
+            { user: { email: { contains: q, mode: "insensitive" } } },
+            { user: { name: { contains: q, mode: "insensitive" } } },
           ],
         }
       : {}),

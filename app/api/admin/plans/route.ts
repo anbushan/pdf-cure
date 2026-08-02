@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   const where: Prisma.PlanWhereInput = {
     ...(active ? { active: active === "true" } : {}),
-    ...(q ? { OR: [{ name: { contains: q } }, { description: { contains: q } }] } : {}),
+    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }] } : {}),
   };
 
   const [rows, total] = await Promise.all([
