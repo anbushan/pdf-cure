@@ -154,6 +154,20 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Is the generated HTML safe to open?", a: "The preview renders in a sandboxed iframe that blocks any scripts from running, so nothing in the AI-generated content can execute code in your browser — even by accident. The downloaded file is plain HTML with no scripts." },
     { q: "How is this different from PDF to Word?", a: "PDF to Word extracts plain text with no structure. This tool asks Claude to infer headings, paragraphs, lists, and tables from the extracted text and output proper semantic HTML — better suited for publishing to a website or CMS than a Word document would be." },
   ],
+  "pdf-to-pdfa": [
+    { q: "Does this guarantee full PDF/A (ISO 19005) compliance?", a: "No — this is a best-effort conversion. It embeds the standard PDF/A identification metadata and document info a validator looks for, but doesn't perform full archival validation such as verifying every font is embedded or attaching a color output profile. For a legally mandated archival submission, verify the result with a dedicated PDF/A validator first." },
+    { q: "Will this change how my PDF looks?", a: "No — the page content itself isn't touched, only metadata is added. Visually the file is identical to the original." },
+  ],
+  "pdf-to-markdown": [
+    { q: "Will headings, tables, and lists come out correctly?", a: "The tool infers structure from formatting cues — larger text becomes headings, aligned columns become table cells, and lines starting with bullets or numbers become lists. It works well on cleanly formatted documents; PDFs with unusual layouts may need light manual cleanup afterward." },
+    { q: "Does this work on scanned PDFs?", a: "Only if the PDF has a selectable text layer. Purely scanned images with no OCR applied have no text to extract — run OCR PDF first." },
+    { q: "Are links preserved?", a: "Yes — clickable links in the original PDF are carried over as Markdown links." },
+  ],
+  "scan-to-pdf": [
+    { q: "Do the photos I take get uploaded anywhere?", a: "Yes, briefly — unlike this app's other tools, which run entirely in your browser, the photos have to pass through our server to travel from your phone to your computer. They're deleted from the server the moment your computer retrieves them to build the PDF." },
+    { q: "How long is the QR code valid for?", a: "15 minutes from when it's generated. If it expires before you're done, just refresh the page on your computer for a new one." },
+    { q: "Can I remove a page before saving?", a: "Yes — tap the trash icon on any thumbnail on your phone to discard it before tapping Save." },
+  ],
 };
 
 export function getToolFaqs(slug: string): FaqItem[] {

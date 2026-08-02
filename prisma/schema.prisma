@@ -133,3 +133,29 @@ model Payment {
   @@index([userId])
   @@index([status])
 }
+
+/// A "Scan to PDF" pairing session (components: app/tools/scan-to-pdf,
+/// app/scan/[id]). The id itself is the unguessable token embedded in the
+/// QR code URL — anyone who scans it can upload to this session, which is
+/// why sessions are short-lived (see EXPIRY_MINUTES in the scan-session
+/// API routes) and images are deleted as soon as the desktop side has
+/// fetched them. No user account is required, matching the rest of the
+/// site's editing tools.
+model ScanSession {
+  id        String   @id
+  status    String   @default("waiting") // waiting | connected | completed
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  images ScanImage[]
+}
+
+model ScanImage {
+  id        String   @id @default(cuid())
+  sessionId String
+  data      Bytes
+  order     Int
+  createdAt DateTime @default(now())
+
+  session ScanSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}

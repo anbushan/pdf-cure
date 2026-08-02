@@ -924,6 +924,269 @@ export async function ocrPdf(
   return { bytes: await out.save(), pageCount: rendered.length };
 }
 
+/* ---------------------------- PDF to Markdown ---------------------------- */
+
+interface MdCell {
+  text: string;
+  x0: number;
+  x1: number;
+}
+interface MdLine {
+  cells: MdCell[];
+  text: string;
+  y: number;
+  fontSize: number;
+}
+
+/**
+ * Extracts text with position and font size (via pdf.js) and reconstructs
+ * structure heuristically: the most common font size on a page is treated
+ * as body text, distinctly larger sizes become H1/H2/H3; runs of
+ * multi-column lines become tables (same column-gap heuristic as
+ * pdfToExcel); lines starting with a bullet or number become list items;
+ * everything else is flowed into paragraphs, with a widened vertical gap
+ * between lines treated as a paragraph break. Link annotations are
+ * matched back to the text inside their bounding box and emitted as
+ * markdown links. This is layout inference, not real structure
+ * recognition — it does well on simple documents, less well on dense
+ * multi-column layouts.
+ */
+export async function pdfToMarkdown(file: File): Promise<string> {
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+  const listItemRe = /^([••\-*◦‣]|\d+[.)]|[a-hA-H][.)])\s+(.+)/;
+  const pageBlocks: string[] = [];
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const rawItems = (textContent.items as any[])
+      .filter((it) => typeof it.str === "string" && it.str.trim() !== "")
+      .map((it) => ({
+        text: it.str as string,
+        x: it.transform[4] as number,
+        y: it.transform[5] as number,
+        width: (it.width as number) || it.str.length * 4,
+        height: Math.round((it.height as number) || Math.abs(it.transform[3] as number) || 10),
+      }));
+    if (rawItems.length === 0) continue;
+
+    const annotations = await page.getAnnotations({ intent: "display" }).catch(() => [] as any[]);
+    const links = (annotations as any[])
+      .filter((a) => a?.subtype === "Link" && typeof a.url === "string" && a.url)
+      .map((a) => ({ url: a.url as string, rect: a.rect as [number, number, number, number] }));
+    const linkAt = (x: number, y: number): string | null => {
+      for (const l of links) {
+        if (x >= l.rect[0] - 1 && x <= l.rect[2] + 1 && y >= l.rect[1] - 1 && y <= l.rect[3] + 1) return l.url;
+      }
+      return null;
+    };
+
+    // Group into lines, top-to-bottom then left-to-right (PDF y grows upward).
+    rawItems.sort((a, b) => b.y - a.y || a.x - b.x);
+    const rawLines: (typeof rawItems)[] = [];
+    for (const it of rawItems) {
+      const last = rawLines[rawLines.length - 1];
+      if (last && Math.abs(last[0].y - it.y) <= 3) last.push(it);
+      else rawLines.push([it]);
+    }
+
+    // Body font size = the mode across lines; sizes clearly larger become heading candidates.
+    const sizeCounts = new Map<number, number>();
+    for (const line of rawLines) {
+      const size = Math.max(...line.map((it) => it.height));
+      sizeCounts.set(size, (sizeCounts.get(size) ?? 0) + 1);
+    }
+    let bodySize = 12;
+    let bodyCount = 0;
+    for (const [size, count] of sizeCounts) {
+      if (count > bodyCount) {
+        bodyCount = count;
+        bodySize = size;
+      }
+    }
+    const headingSizes = Array.from(sizeCounts.keys())
+      .filter((s) => s > bodySize * 1.12)
+      .sort((a, b) => b - a);
+    const headingLevel = (size: number) => {
+      const idx = headingSizes.indexOf(size);
+      return idx === -1 ? null : Math.min(idx + 1, 3);
+    };
+
+    const lines: MdLine[] = rawLines.map((line) => {
+      line.sort((a, b) => a.x - b.x);
+      const fontSize = Math.max(...line.map((it) => it.height));
+      const columnGap = Math.max(10, fontSize * 1.5);
+
+      // Link-wrap each raw item individually, before cells get merged —
+      // once merged into a wider cell, the cell's own midpoint usually
+      // falls outside a link's (narrower) rect, so linking has to happen
+      // per-item first.
+      const y = line[0].y;
+      const withLink = (it: (typeof line)[number]) => {
+        const url = linkAt(it.x + it.width / 2, y);
+        return url ? `[${it.text}](${url})` : it.text;
+      };
+
+      const cellsRaw: MdCell[] = [];
+      let current = withLink(line[0]);
+      let x0 = line[0].x;
+      let prevEnd = line[0].x + line[0].width;
+      for (let k = 1; k < line.length; k++) {
+        const it = line[k];
+        const gap = it.x - prevEnd;
+        if (gap > columnGap) {
+          cellsRaw.push({ text: current.trim(), x0, x1: prevEnd });
+          current = withLink(it);
+          x0 = it.x;
+        } else {
+          current += (gap > 1 ? " " : "") + withLink(it);
+        }
+        prevEnd = it.x + it.width;
+      }
+      cellsRaw.push({ text: current.trim(), x0, x1: prevEnd });
+
+      const cells = cellsRaw.filter((c) => c.text);
+      return { cells, text: cells.map((c) => c.text).join(" "), y, fontSize };
+    });
+
+    const md: string[] = [];
+    let paraLines: string[] = [];
+    let paraPrevY: number | null = null;
+    let tableBuffer: MdLine[] = [];
+    let listBuffer: string[] = [];
+
+    const flushPara = () => {
+      if (paraLines.length) md.push(paraLines.join(" "));
+      paraLines = [];
+      paraPrevY = null;
+    };
+    const flushList = () => {
+      if (listBuffer.length) md.push(listBuffer.join("\n"));
+      listBuffer = [];
+    };
+    const flushTable = () => {
+      if (tableBuffer.length >= 2) {
+        const colCount = Math.max(...tableBuffer.map((l) => l.cells.length));
+        const pad = (l: MdLine) => {
+          const c = l.cells.map((x) => x.text);
+          while (c.length < colCount) c.push("");
+          return c;
+        };
+        const tableLines = [
+          `| ${pad(tableBuffer[0]).join(" | ")} |`,
+          `| ${Array(colCount).fill("---").join(" | ")} |`,
+          ...tableBuffer.slice(1).map((row) => `| ${pad(row).join(" | ")} |`),
+        ];
+        md.push(tableLines.join("\n"));
+      } else if (tableBuffer.length === 1) {
+        paraLines.push(tableBuffer[0].text);
+      }
+      tableBuffer = [];
+    };
+
+    for (const line of lines) {
+      if (!line.text.trim()) continue;
+      const level = headingLevel(line.fontSize);
+      if (level) {
+        flushTable();
+        flushList();
+        flushPara();
+        md.push(`${"#".repeat(level)} ${line.cells.map((c) => c.text).join(" ")}`);
+        continue;
+      }
+
+      if (line.cells.length >= 2) {
+        flushList();
+        flushPara();
+        tableBuffer.push(line);
+        continue;
+      }
+
+      flushTable();
+      const listMatch = line.text.match(listItemRe);
+      if (listMatch) {
+        flushPara();
+        const isNumbered = /^\d+[.)]$/.test(listMatch[1]);
+        listBuffer.push(`${isNumbered ? listMatch[1].replace(/\)$/, ".") : "-"} ${listMatch[2]}`);
+        continue;
+      }
+
+      flushList();
+      if (paraPrevY !== null && paraPrevY - line.y > line.fontSize * 1.8) flushPara();
+      paraLines.push(line.text);
+      paraPrevY = line.y;
+    }
+    flushTable();
+    flushList();
+    flushPara();
+
+    if (md.length) pageBlocks.push(md.join("\n\n"));
+  }
+
+  return pageBlocks.join("\n\n---\n\n") + "\n";
+}
+
+/* ---------------------------- PDF to PDF/A ---------------------------- */
+
+/**
+ * Best-effort PDF/A-1b tagging: rebuilds the document from scratch (the
+ * same trick repairPdf uses, which also fixes common structural issues),
+ * strips encryption, and writes XMP metadata declaring PDF/A-1B
+ * conformance plus standard document metadata.
+ *
+ * This does NOT perform full ISO 19005 validation — in particular it
+ * doesn't verify every font used is embedded, and it doesn't embed a
+ * color-profile OutputIntent (both of which a strict validator like
+ * veraPDF checks for, and neither of which is realistically achievable
+ * from inside a browser without a native PDF engine). For legally
+ * mandated archival submissions, verify the output with a dedicated
+ * validator rather than relying on this alone.
+ */
+export async function pdfToPdfA(file: File): Promise<Uint8Array> {
+  const { PDFName } = await getPdfLib();
+  const doc = await loadDoc(file);
+
+  const now = new Date();
+  doc.setProducer("PDFCure");
+  doc.setCreationDate(now);
+  doc.setModificationDate(now);
+  if (!doc.getTitle()?.trim()) doc.setTitle(file.name.replace(/\.[^/.]+$/, ""));
+
+  const xmp = buildPdfAXmp({ title: doc.getTitle() ?? file.name, producer: "PDFCure", createDate: now });
+  const metadataBytes = new TextEncoder().encode(xmp);
+  const metadataStream = doc.context.stream(metadataBytes, { Type: "Metadata", Subtype: "XML" });
+  const metadataRef = doc.context.register(metadataStream);
+  doc.catalog.set(PDFName.of("Metadata"), metadataRef);
+
+  return doc.save();
+}
+
+function buildPdfAXmp({ title, producer, createDate }: { title: string; producer: string; createDate: Date }): string {
+  const iso = createDate.toISOString();
+  return `<?xpacket begin="﻿" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+      xmlns:pdf="http://ns.adobe.com/pdf/1.3/">
+      <pdfaid:part>1</pdfaid:part>
+      <pdfaid:conformance>B</pdfaid:conformance>
+      <dc:format>application/pdf</dc:format>
+      <dc:title><rdf:Alt><rdf:li xml:lang="x-default">${escapeHtml(title)}</rdf:li></rdf:Alt></dc:title>
+      <xmp:CreateDate>${iso}</xmp:CreateDate>
+      <xmp:ModifyDate>${iso}</xmp:ModifyDate>
+      <pdf:Producer>${escapeHtml(producer)}</pdf:Producer>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+<?xpacket end="w"?>`;
+}
+
 /* ---------------------------- shared utils ---------------------------- */
 
 function dataUrlToBytes(dataUrl: string): Uint8Array {

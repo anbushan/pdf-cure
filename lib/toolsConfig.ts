@@ -43,6 +43,9 @@ export const TOOLS: ToolMeta[] = [
   // Convert
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn images into a PDF in seconds.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-jpg", name: "PDF to JPG", description: "Export each page as a JPG image.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "scan-to-pdf", name: "Scan to PDF", description: "Scan documents from your phone straight into a PDF.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "pdf-to-pdfa", name: "PDF to PDF/A", description: "Convert a PDF to the PDF/A archival format.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "pdf-to-markdown", name: "PDF to Markdown", description: "Turn a PDF into clean Markdown — headings, tables, and links intact.", category: "Convert", status: "live", accent: "amber" },
   { slug: "word-to-pdf", name: "Word to PDF", description: "Convert .docx files to PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-word", name: "PDF to Word", description: "Export PDF text into an editable .docx.", category: "Convert", status: "live", accent: "amber" },
   { slug: "excel-to-pdf", name: "Excel to PDF", description: "Convert spreadsheets to PDF.", category: "Convert", status: "live", accent: "amber" },

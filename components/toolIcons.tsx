@@ -27,6 +27,9 @@ import {
   GitCompare,
   Wand2,
   FileCode,
+  FileCode2,
+  Archive,
+  ScanLine,
   type LucideIcon,
 } from "lucide-react";
 
@@ -47,6 +50,9 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   ocr: ScanText,
   "jpg-to-pdf": ImageIcon,
   "pdf-to-jpg": FileImage,
+  "scan-to-pdf": ScanLine,
+  "pdf-to-pdfa": Archive,
+  "pdf-to-markdown": FileCode2,
   "word-to-pdf": FileType2,
   "pdf-to-word": FileType2,
   "excel-to-pdf": FileSpreadsheet,
