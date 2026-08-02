@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
@@ -40,6 +39,7 @@ export default function SplitPage() {
       const groups = parseRanges(ranges, pageCount);
       if (groups.length === 0) throw new Error("Enter at least one valid page range, e.g. 1-3,5,7-9");
       const parts = await splitByRanges(file, groups);
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       parts.forEach((bytes, i) => {
         zip.file(`${stripExt(file.name)}_part${i + 1}.pdf`, bytes);

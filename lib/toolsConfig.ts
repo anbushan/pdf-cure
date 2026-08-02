@@ -21,11 +21,11 @@ export interface ToolMeta {
 
 export const TOOLS: ToolMeta[] = [
   // AI
-  { slug: "summarize", name: "Summarize PDF", description: "Get a concise summary of a long document.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ask", name: "Ask your PDF", description: "Chat with a document and get sourced answers.", category: "AI", status: "live", accent: "violet" },
-  { slug: "translate", name: "Translate PDF", description: "Translate a PDF's text into another language.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ai-html-to-pdf", name: "AI HTML to PDF", description: "Clean up messy HTML and convert it to a polished PDF.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ai-pdf-to-html", name: "AI PDF to HTML", description: "Turn a PDF into clean, structured HTML you can publish.", category: "AI", status: "live", accent: "violet" },
+  { slug: "summarize", name: "Summarize PDF", description: "Get a concise summary of a long document.", category: "AI", status: "soon", accent: "violet", soonReason: "AI features are temporarily disabled." },
+  { slug: "ask", name: "Ask your PDF", description: "Chat with a document and get sourced answers.", category: "AI", status: "soon", accent: "violet", soonReason: "AI features are temporarily disabled." },
+  { slug: "translate", name: "Translate PDF", description: "Translate a PDF's text into another language.", category: "AI", status: "soon", accent: "violet", soonReason: "AI features are temporarily disabled." },
+  { slug: "ai-html-to-pdf", name: "AI HTML to PDF", description: "Clean up messy HTML and convert it to a polished PDF.", category: "AI", status: "soon", accent: "violet", soonReason: "AI features are temporarily disabled." },
+  { slug: "ai-pdf-to-html", name: "AI PDF to HTML", description: "Turn a PDF into clean, structured HTML you can publish.", category: "AI", status: "soon", accent: "violet", soonReason: "AI features are temporarily disabled." },
 
   // Organize
   { slug: "merge", name: "Merge PDF", description: "Combine PDFs in the order you want.", category: "Organize", status: "live", accent: "teal" },

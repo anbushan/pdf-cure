@@ -9,7 +9,7 @@ import { TOOLS } from "@/lib/toolsConfig";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
 
-const POPULAR = ["merge", "split", "compress", "summarize"];
+const POPULAR = ["merge", "split", "compress", "pdf-to-word"];
 
 const HEADINGS: Record<string, { error: string; title: string; body: string; home: string; tools: string; popular: string }> = {
   en: { error: "Error 404", title: "This page got lost in the shuffle.", body: "doesn't exist — it may have moved, or the link might be off.", home: "Go to homepage", tools: "See all tools", popular: "Popular tools" },

@@ -3,11 +3,11 @@ import type { FaqItem } from "@/components/Faq";
 export const SITE_FAQS: FaqItem[] = [
   {
     q: "Is PDFCure actually free?",
-    a: "Yes. Every editing tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) depend on whoever's running this instance configuring an API key — check with them if those specifically require a plan.",
+    a: "Yes. Every tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) are temporarily disabled.",
   },
   {
     q: "Do you upload my files to a server?",
-    a: "For every tool except Summarize, Ask your PDF, and Translate, no — the file never leaves your device. Those three AI tools extract text in your browser and send that text (not the file itself) to a server to generate a response, and each of those pages says so explicitly.",
+    a: "No — every tool here processes your files entirely on your device, and nothing is uploaded to a server. The AI tools that used to send extracted text to a server are currently disabled.",
   },
   {
     q: "Is there a file size limit?",
@@ -23,7 +23,7 @@ export const SITE_FAQS: FaqItem[] = [
   },
   {
     q: "Can I use this offline?",
-    a: "Yes, once you've installed it (or just visited it once) — the editing tools keep working with no internet connection. The AI tools need a live connection since they call an external API.",
+    a: "Yes, once you've installed it (or just visited it once) — every tool here keeps working with no internet connection.",
   },
 ];
 

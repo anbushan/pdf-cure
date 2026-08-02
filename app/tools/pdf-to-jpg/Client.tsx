@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
@@ -26,6 +25,7 @@ export default function PdfToJpgPage() {
     setError(null);
     try {
       const rendered = await renderPdfPages(file, 2, undefined, 0.9);
+      const { default: JSZip } = await import("jszip");
       const zip = new JSZip();
       rendered.forEach((p) => {
         const base64 = p.dataUrl.split(",")[1];

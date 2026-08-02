@@ -4,6 +4,7 @@ import { BLOG_POSTS } from "@/lib/blogPosts";
 import { SITE_URL, SITE_NAME } from "@/lib/pageMetadata";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import BlogHeading from "./BlogHeading";
+import AdSlot from "@/components/AdSlot";
 import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -43,6 +44,8 @@ export default function BlogIndexPage() {
             </Link>
           ))}
         </div>
+
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_TOOL ?? ""} minHeight={100} className="mt-10" />
       </div>
     </div>
   );
