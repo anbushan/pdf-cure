@@ -3,16 +3,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import InstallPrompt from "./InstallPrompt";
 import FeedbackButton from "./FeedbackButton";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
+import AuthButton from "./AuthButton";
 import { useLanguage } from "./LanguageProvider";
 
 export default function Header() {
   const { t } = useLanguage();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  if (pathname?.startsWith("/admin")) return null;
 
   const navLinks = [
     { href: "/#ai",       label: t("catAI"),       className: "text-violet-dark font-medium hover:text-violet" },
@@ -63,6 +68,7 @@ export default function Header() {
           <div className="hidden sm:block">
             <InstallPrompt />
           </div>
+          <AuthButton />
 
           {/* Hamburger — visible below lg */}
           <button

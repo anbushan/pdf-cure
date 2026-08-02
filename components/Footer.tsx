@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { CATEGORIES, CATEGORY_TKEY, TOOLS } from "@/lib/toolsConfig";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
 
 export default function Footer() {
   const { t, locale } = useLanguage();
+  const pathname = usePathname();
   const liveTools = TOOLS.filter((t) => t.status === "live");
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <footer className="border-t border-paper-line mt-24">

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { UploadCloud, HardDrive, Loader2 } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
-import { isDriveConfigured, pickFromDrive } from "@/lib/googleDrive";
+import { useDriveConfigured, pickFromDrive } from "@/lib/googleDrive";
 
 interface DropzoneProps {
   accept: string;
@@ -22,7 +22,7 @@ export default function Dropzone({ accept, multiple, label, hint, onFiles, drive
   const inputRef = useRef<HTMLInputElement>(null);
   const { t } = useLanguage();
   const toast = useToast();
-  const driveEnabled = isDriveConfigured();
+  const driveEnabled = useDriveConfigured();
 
   const handleFiles = useCallback(
     (fileList: FileList | null) => {

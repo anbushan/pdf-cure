@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
 import AdSenseScript from "@/components/AdSenseScript";
+import AuthProvider from "@/components/AuthProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AnalyticsPageview from "@/components/AnalyticsPageview";
 import ErrorTracker from "@/components/ErrorTracker";
@@ -106,17 +107,19 @@ export default function RootLayout({
         <AdSenseScript />
         <GoogleAnalytics />
         <ErrorTracker />
-        <ThemeProvider>
-          <LanguageProvider>
-            <ToastProvider>
-              <AnalyticsPageview />
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <CookieBanner />
-            </ToastProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              <ToastProvider>
+                <AnalyticsPageview />
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <CookieBanner />
+              </ToastProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

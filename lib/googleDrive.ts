@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 declare global {
   interface Window {
     gapi?: any;
@@ -7,12 +9,43 @@ declare global {
   }
 }
 
-export const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-export const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY;
-export const GOOGLE_APP_ID = process.env.NEXT_PUBLIC_GOOGLE_APP_ID;
+interface DriveConfig {
+  clientId?: string;
+  apiKey?: string;
+  appId?: string;
+}
 
-export function isDriveConfigured() {
-  return Boolean(GOOGLE_CLIENT_ID && GOOGLE_API_KEY);
+// Fetched at runtime (not process.env.NEXT_PUBLIC_*) so an admin can turn
+// Drive import on for every tool from the Configuration panel without a
+// rebuild — see app/api/public-config/route.ts and lib/settings.ts.
+let configPromise: Promise<DriveConfig> | null = null;
+
+function fetchDriveConfig(): Promise<DriveConfig> {
+  if (!configPromise) {
+    configPromise = fetch("/api/public-config")
+      .then((r) => r.json())
+      .then((data) => ({
+        clientId: data.GOOGLE_CLIENT_ID || undefined,
+        apiKey: data.NEXT_PUBLIC_GOOGLE_API_KEY || undefined,
+        appId: data.NEXT_PUBLIC_GOOGLE_APP_ID || undefined,
+      }));
+  }
+  return configPromise;
+}
+
+/** Whether Google Drive import is configured — starts false and flips once the runtime config loads. */
+export function useDriveConfigured(): boolean {
+  const [configured, setConfigured] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    fetchDriveConfig().then((c) => {
+      if (mounted) setConfigured(Boolean(c.clientId && c.apiKey));
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+  return configured;
 }
 
 let gapiLoadPromise: Promise<void> | null = null;
@@ -55,7 +88,7 @@ function loadGis(): Promise<void> {
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
-function getAccessToken(): Promise<string> {
+function getAccessToken(clientId: string): Promise<string> {
   return new Promise((resolve, reject) => {
     if (cachedToken && cachedToken.expiresAt > Date.now()) {
       resolve(cachedToken.token);
@@ -63,7 +96,7 @@ function getAccessToken(): Promise<string> {
     }
     try {
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: clientId,
         scope: "https://www.googleapis.com/auth/drive.readonly",
         callback: (response: any) => {
           if (response.error) {
@@ -93,12 +126,13 @@ export interface DrivePickResult {
  * regular drag-and-drop dropzone uses) or null if the user cancels.
  */
 export async function pickFromDrive(mimeTypes: string): Promise<DrivePickResult | null> {
-  if (!isDriveConfigured()) {
+  const { clientId, apiKey, appId } = await fetchDriveConfig();
+  if (!clientId || !apiKey) {
     throw new Error("Google Drive import isn't configured on this site yet.");
   }
 
   await Promise.all([loadGapi(), loadGis()]);
-  const token = await getAccessToken();
+  const token = await getAccessToken(clientId);
 
   return new Promise((resolve, reject) => {
     const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS)
@@ -108,7 +142,7 @@ export async function pickFromDrive(mimeTypes: string): Promise<DrivePickResult 
     const builder = new window.google.picker.PickerBuilder()
       .addView(view)
       .setOAuthToken(token)
-      .setDeveloperKey(GOOGLE_API_KEY)
+      .setDeveloperKey(apiKey)
       .setCallback(async (data: any) => {
         if (data.action === window.google.picker.Action.PICKED) {
           const doc = data.docs[0];
@@ -128,7 +162,7 @@ export async function pickFromDrive(mimeTypes: string): Promise<DrivePickResult 
         }
       });
 
-    if (GOOGLE_APP_ID) builder.setAppId(GOOGLE_APP_ID);
+    if (appId) builder.setAppId(appId);
     builder.build().setVisible(true);
   });
 }

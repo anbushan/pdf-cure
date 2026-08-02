@@ -3,11 +3,11 @@ import type { FaqItem } from "@/components/Faq";
 export const SITE_FAQS: FaqItem[] = [
   {
     q: "Is PDFCure actually free?",
-    a: "Yes. Every tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) are temporarily disabled.",
+    a: "Yes. Every editing tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) require a free Google sign-in and are limited to one use per day per account.",
   },
   {
     q: "Do you upload my files to a server?",
-    a: "No — every tool here processes your files entirely on your device, and nothing is uploaded to a server. The AI tools that used to send extracted text to a server are currently disabled.",
+    a: "For every tool except Summarize, Ask your PDF, and Translate, no — the file never leaves your device. Those three AI tools extract text in your browser and send that text (not the file itself) to a server to generate a response.",
   },
   {
     q: "Is there a file size limit?",
@@ -15,7 +15,7 @@ export const SITE_FAQS: FaqItem[] = [
   },
   {
     q: "Do I need to create an account?",
-    a: "No. Every tool works immediately with no sign-up.",
+    a: "Only for the AI tools, which need a Google sign-in and allow one use per day per account. Every other tool works immediately with no sign-up.",
   },
   {
     q: "Does this work on mobile?",
@@ -23,7 +23,7 @@ export const SITE_FAQS: FaqItem[] = [
   },
   {
     q: "Can I use this offline?",
-    a: "Yes, once you've installed it (or just visited it once) — every tool here keeps working with no internet connection.",
+    a: "Yes, once you've installed it (or just visited it once) — the non-AI tools keep working with no internet connection. The AI tools need a live connection and a signed-in Google account.",
   },
 ];
 
