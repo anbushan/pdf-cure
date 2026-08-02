@@ -31,6 +31,7 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   merge: [
     { q: "Can I change the order of the files before merging?", a: "Yes — after you add files, use the up/down arrows next to each one to reorder them before merging." },
     { q: "Is there a limit on how many PDFs I can merge?", a: "No hard limit — you can add as many files as your browser's memory can comfortably handle." },
+    { q: "Is 'combine PDF' or 'join PDF' the same as merging?", a: "Yes — merge, combine, and join all mean the same thing here: putting multiple PDFs together into a single file in the order you choose." },
   ],
   split: [
     { q: "What format do I use for page ranges?", a: "Comma-separated groups like 1-3,5,7-9. Each group becomes its own PDF, delivered together in a single zip." },
@@ -55,6 +56,7 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   compress: [
     { q: "Why did my file's text become blurry after compressing?", a: "Compression re-renders each page as an image and re-encodes it — it trades sharpness for file size, which is most noticeable on small text at the 'High' setting. Try 'Low' or 'Medium' first." },
     { q: "Will compression remove hyperlinks or form fields?", a: "Yes — because the page is flattened to an image, interactive elements like links and form fields won't survive compression." },
+    { q: "Is this the same as a 'PDF size reducer'?", a: "Yes — compressing a PDF and reducing its file size are the same operation. This tool re-encodes the page images at your chosen quality level to shrink the total size." },
   ],
   repair: [
     { q: "What kinds of damage can this actually fix?", a: "It rebuilds the file's internal object table and cross-reference index from scratch, which resolves most 'can't open this file' or 'file is damaged' errors caused by a broken xref table or a corrupted incremental save. It can't fix a file that's simply not a PDF, or recover content that was never saved in the first place." },
@@ -84,6 +86,7 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   "jpg-to-pdf": [
     { q: "Can I mix JPG and PNG files in one PDF?", a: "Yes — you can add both formats and they'll all convert into a single PDF, one image per page." },
     { q: "Can I control the order of the pages?", a: "Pages follow the order you add the images in — remove and re-add an image to move it." },
+    { q: "Does this work for photos, screenshots, or scanned pages too?", a: "Yes — any image file works the same way, whether it's a photo, a screenshot, or a scan; each one becomes its own page in the PDF." },
   ],
   "pdf-to-jpg": [
     { q: "What resolution are the exported images?", a: "Pages are rendered at 2x scale for a sharp result suitable for viewing or printing, then bundled into a single zip file." },
@@ -100,6 +103,7 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   "pdf-to-word": [
     { q: "Why is my exported .docx just plain text with no formatting?", a: "This tool extracts text only — layout, images, and tables aren't reconstructed. It's meant for quickly getting editable text out, not a pixel-perfect conversion." },
     { q: "Why did it produce an empty document?", a: "If the PDF is a scanned image with no selectable text layer, there's no text to extract. This tool doesn't perform OCR." },
+    { q: "Does this produce a .doc or a .docx file?", a: "A .docx file — the modern Word format used by Word 2007 and later, and by Google Docs, LibreOffice, and Pages." },
   ],
   "excel-to-pdf": [
     { q: "Does this preserve cell formulas?", a: "No — cells convert to their currently displayed values, not their underlying formulas, since a PDF has no concept of formulas." },
@@ -121,6 +125,7 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   unlock: [
     { q: "Do I need to know the password to use this?", a: "Yes — this removes a password you already know, verified locally in your browser before anything happens. It doesn't crack, guess, or brute-force a password you don't have." },
     { q: "What happens if I enter the wrong password?", a: "You'll get a clear \"that password doesn't match\" message and can try again — nothing is sent anywhere in the process, so there's no lockout or attempt limit." },
+    { q: "Is this the same as a 'PDF password remover'?", a: "Yes — unlocking and removing a password both mean the same thing: stripping the encryption from a PDF once you've verified you know its password." },
   ],
   "pdf-to-powerpoint": [
     { q: "Can I edit the text on the slides afterward?", a: "Not directly — each slide is a full-page image of the original PDF page, so text isn't a separate editable element the way it would be in a slide built from scratch in PowerPoint." },

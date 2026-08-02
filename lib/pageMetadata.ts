@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTool } from "./toolsConfig";
+import { TOOL_KEYWORDS, TOOL_SEO_OVERRIDES } from "./seoKeywords";
 
 // Update this once you know the real deployment domain — it feeds
 // canonical URLs, Open Graph tags, and the sitemap.
@@ -9,15 +10,18 @@ export const SITE_TAGLINE = "Quick Fix for Your PDFs";
 
 export function buildToolMetadata(slug: string): Metadata {
   const tool = getTool(slug);
-  const title = tool ? `${tool.name} — free & private | ${SITE_NAME}` : SITE_NAME;
-  const description = tool
-    ? `${tool.description} Runs in your browser — no upload, no sign-up, free.`
-    : "Free, private PDF tools that run in your browser.";
+  const override = TOOL_SEO_OVERRIDES[slug];
+  const title = override?.title ?? (tool ? `${tool.name} — free & private | ${SITE_NAME}` : SITE_NAME);
+  const description =
+    override?.description ??
+    (tool ? `${tool.description} Runs in your browser — no upload, no sign-up, free.` : "Free, private PDF tools that run in your browser.");
+  const keywords = TOOL_KEYWORDS[slug];
   const url = `${SITE_URL}/tools/${slug}`;
 
   return {
     title,
     description,
+    ...(keywords ? { keywords } : {}),
     alternates: { canonical: url },
     openGraph: {
       title,

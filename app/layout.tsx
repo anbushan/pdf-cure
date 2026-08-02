@@ -42,6 +42,11 @@ export const metadata: Metadata = {
   title: `${SITE_NAME} — free PDF tools that run in your browser`,
   description:
     "Merge, split, compress, sign, and convert PDFs entirely in your browser. Nothing is uploaded to a server. Free, no account needed.",
+  keywords: [
+    "merge pdf", "split pdf", "combine pdf", "extract pdf", "compress pdf", "convert pdf",
+    "word to pdf", "pdf to word", "excel to pdf", "pdf to excel", "powerpoint to pdf", "pdf to powerpoint",
+    "pdf to jpg", "jpg to pdf", "pdf converter", "pdf editor", "unlock pdf", "sign pdf",
+  ],
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
