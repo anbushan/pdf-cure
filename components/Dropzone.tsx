@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { UploadCloud, HardDrive, Loader2 } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
 import { useDriveConfigured, pickFromDrive } from "@/lib/googleDrive";
+import { takePendingFile } from "@/lib/pendingFile";
 
 interface DropzoneProps {
   accept: string;
@@ -31,6 +32,15 @@ export default function Dropzone({ accept, multiple, label, hint, onFiles, drive
     },
     [onFiles]
   );
+
+  // Picks up a file handed off from the homepage's quick-access dropzone
+  // (see lib/pendingFile.ts) — one-shot, so this only fires the instant a
+  // tool page is landed on via that flow, never on a normal direct visit.
+  useEffect(() => {
+    const pending = takePendingFile();
+    if (pending) onFiles([pending]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleDriveImport() {
     setDrivePicking(true);

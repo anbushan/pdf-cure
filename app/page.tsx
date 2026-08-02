@@ -4,14 +4,20 @@ import AdSlot from "@/components/AdSlot";
 import HeroText from "@/components/HeroText";
 import TrustSection from "@/components/TrustSection";
 import HeroBadges from "@/components/HeroBadges";
+import HeroDropzone from "@/components/HeroDropzone";
 import SignInSection from "@/components/SignInSection";
 
 export default function Home() {
   return (
     <div>
       <section className="mx-auto max-w-6xl px-6 pt-16 pb-10 sm:pt-24">
-        <HeroText />
-        <HeroBadges />
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-12">
+          <div>
+            <HeroText />
+            <HeroBadges />
+          </div>
+          <HeroDropzone />
+        </div>
       </section>
 
       {CATEGORIES.map((category) => {
