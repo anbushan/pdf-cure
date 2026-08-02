@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/getSession";
-import { createSubscription } from "@/lib/razorpay";
+import { createSubscription, razorpayErrorMessage } from "@/lib/razorpay";
 import { getSetting } from "@/lib/settings";
 import { prisma } from "@/lib/prisma";
 
@@ -25,6 +25,6 @@ export async function POST() {
     const keyId = await getSetting("RAZORPAY_KEY_ID");
     return NextResponse.json({ subscriptionId: subscription.id, keyId });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Couldn't start checkout." }, { status: 500 });
+    return NextResponse.json({ error: razorpayErrorMessage(e, "Couldn't start checkout.") }, { status: 500 });
   }
 }

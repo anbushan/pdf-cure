@@ -1,6 +1,19 @@
 import Razorpay from "razorpay";
 import { getSetting, setSetting } from "./settings";
 
+/**
+ * The razorpay SDK rejects with a plain `{ statusCode, error: { description } }`
+ * object (or in some cases just `{ statusCode, error: "Unauthorized" }`), not
+ * a real `Error` — `e.message` is always undefined for these, so routes that
+ * did `e?.message ?? fallback` were silently swallowing the actual reason
+ * (e.g. invalid/revoked API keys showing as a generic "couldn't start
+ * checkout" instead of "Unauthorized").
+ */
+export function razorpayErrorMessage(e: any, fallback: string): string {
+  if (typeof e?.error === "string") return e.error;
+  return e?.error?.description || e?.error?.reason || e?.message || fallback;
+}
+
 export async function getRazorpayClient(): Promise<Razorpay | null> {
   const keyId = await getSetting("RAZORPAY_KEY_ID");
   const keySecret = await getSetting("RAZORPAY_KEY_SECRET");

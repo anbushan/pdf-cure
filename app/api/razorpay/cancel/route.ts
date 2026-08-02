@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/getSession";
-import { cancelSubscription } from "@/lib/razorpay";
+import { cancelSubscription, razorpayErrorMessage } from "@/lib/razorpay";
 import { prisma } from "@/lib/prisma";
 
 export async function POST() {
@@ -18,6 +18,6 @@ export async function POST() {
     await cancelSubscription(user.razorpaySubscriptionId);
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Couldn't cancel the subscription." }, { status: 500 });
+    return NextResponse.json({ error: razorpayErrorMessage(e, "Couldn't cancel the subscription.") }, { status: 500 });
   }
 }
