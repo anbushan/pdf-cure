@@ -13,7 +13,7 @@ export default function Footer() {
   const pathname = usePathname();
   const liveTools = TOOLS.filter((t) => t.status === "live");
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/account")) return null;
 
   return (
     <footer className="border-t border-paper-line mt-24">

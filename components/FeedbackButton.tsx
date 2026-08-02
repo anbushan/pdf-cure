@@ -26,7 +26,7 @@ export default function FeedbackButton() {
 
   useEffect(() => setMounted(true), []);
 
-  const suppressed = pathname?.startsWith("/admin") || pathname?.startsWith("/scan/");
+  const suppressed = pathname?.startsWith("/admin") || pathname?.startsWith("/account") || pathname?.startsWith("/scan/");
 
   useEffect(() => {
     if (!open) return;

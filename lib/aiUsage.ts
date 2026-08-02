@@ -53,3 +53,40 @@ export async function getAiUsageStatus(userId: string, feature: string): Promise
 export async function recordAiUsage(userId: string, feature: string): Promise<void> {
   await prisma.aiUsage.create({ data: { userId, feature, usedOn: today() } });
 }
+
+export interface AiUsageSummary {
+  plan: Plan;
+  planExpiresAt: Date | null;
+  /** Free plan only — the single shared pool's size and how much of it is used today. */
+  freeLimit?: number;
+  freeUsed?: number;
+  /** Pro plan only — each AI tool's own pool is this size. */
+  proLimitPerFeature?: number;
+  byFeature: { feature: string; used: number }[];
+}
+
+/** Today's AI usage across every feature for one user — powers the /account dashboard. */
+export async function getAiUsageSummary(userId: string): Promise<AiUsageSummary> {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { plan: true, planExpiresAt: true },
+  });
+  const plan = effectivePlan(user);
+  const usedOn = today();
+
+  const rows = await prisma.aiUsage.groupBy({
+    by: ["feature"],
+    where: { userId, usedOn },
+    _count: { _all: true },
+  });
+  const byFeature = rows.map((r) => ({ feature: r.feature, used: r._count._all }));
+
+  if (plan === "pro") {
+    const proLimitPerFeature = parseInt((await getSetting("PRO_DAILY_LIMIT_PER_FEATURE")) ?? "20", 10);
+    return { plan, planExpiresAt: user.planExpiresAt, proLimitPerFeature, byFeature };
+  }
+
+  const freeLimit = parseInt((await getSetting("FREE_DAILY_LIMIT")) ?? "1", 10);
+  const freeUsed = byFeature.reduce((sum, f) => sum + f.used, 0);
+  return { plan, planExpiresAt: user.planExpiresAt, freeLimit, freeUsed, byFeature };
+}

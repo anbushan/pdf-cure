@@ -17,7 +17,7 @@ export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  if (pathname?.startsWith("/admin")) return null;
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/account")) return null;
 
   const navLinks = [
     { href: "/#ai",       label: t("catAI"),       className: "text-violet-dark font-medium hover:text-violet" },

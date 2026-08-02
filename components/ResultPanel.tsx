@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { CheckCircle2, RotateCcw, Download } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
@@ -19,6 +20,7 @@ export default function ResultPanel({ title, detail, onDownload, onReset, downlo
   const { t } = useLanguage();
   const toast = useToast();
   const pathname = usePathname();
+  const { status } = useSession();
   const fired = useRef(false);
 
   // Guard against React StrictMode double-invocation — only toast once.
@@ -27,6 +29,21 @@ export default function ResultPanel({ title, detail, onDownload, onReset, downlo
     fired.current = true;
     toast.success(title);
     trackEvent("tool_success", { page: pathname });
+
+    // "My Downloads" / "Recent Activity" under /account — tool + timestamp
+    // only, never the file. Best-effort: signed-out visitors (most tool
+    // usage) are never logged, and a failed request here shouldn't affect
+    // the tool itself, so errors are swallowed.
+    if (status === "authenticated") {
+      const slug = pathname?.split("/")[2];
+      if (slug) {
+        fetch("/api/account/activity", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tool: slug }),
+        }).catch(() => {});
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

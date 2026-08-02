@@ -32,6 +32,7 @@ model User {
   aiUsage           AiUsage[]
   payments          Payment[]
   notificationReads NotificationRead[]
+  activities        UserActivity[]
 }
 
 model Account {
@@ -236,4 +237,23 @@ model Plan {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/// One row per completed tool run, logged from components/ResultPanel.tsx
+/// whenever a signed-in user finishes any of the non-AI tools (compress,
+/// merge, sign, etc. — every tool that renders a ResultPanel). Only the
+/// tool slug and timestamp are stored, never the file itself or its name
+/// — this powers "My Downloads" / "Recent Activity" under /account
+/// without changing the app's actual privacy model, since the file
+/// still never leaves the browser. AI tool usage is tracked separately
+/// in AiUsage and merged into the same feed at read time.
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  tool      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

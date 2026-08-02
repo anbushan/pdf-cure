@@ -3,8 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { LogOut, Sparkle, Trash2, AlertTriangle, Loader2 } from "lucide-react";
-import { useToast } from "./ToastProvider";
+import { LogOut, Sparkle, UserCircle } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
 
 function GoogleMark() {
@@ -39,20 +38,15 @@ function Avatar({ session, size = 28 }: { session: NonNullable<ReturnType<typeof
 }
 
 export default function AuthButton() {
-  const { data: session, status, update } = useSession();
-  const toast = useToast();
+  const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
   const [confirmingLogout, setConfirmingLogout] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setConfirmingDelete(false);
       }
     }
     document.addEventListener("mousedown", onClickOutside);
@@ -73,35 +67,6 @@ export default function AuthButton() {
   }
 
   const isPro = session.user.plan === "pro";
-
-  async function handleCancelSubscription() {
-    setCancelling(true);
-    try {
-      const res = await fetch("/api/razorpay/cancel", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Couldn't cancel.");
-      toast.success("Subscription cancelled — you'll keep Pro until the current period ends.");
-      await update();
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't cancel.");
-    } finally {
-      setCancelling(false);
-    }
-  }
-
-  async function handleDeleteAccount() {
-    setDeleting(true);
-    try {
-      const res = await fetch("/api/account/delete", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Couldn't delete your account.");
-      await signOut({ callbackUrl: "/" });
-    } catch (e: any) {
-      toast.error(e?.message ?? "Couldn't delete your account.");
-      setDeleting(false);
-      setConfirmingDelete(false);
-    }
-  }
 
   return (
     <div className="relative" ref={containerRef}>
@@ -141,57 +106,22 @@ export default function AuthButton() {
                 Renews {new Date(session.user.planExpiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </p>
             )}
-            {isPro && (
-              <button
-                onClick={handleCancelSubscription}
-                disabled={cancelling}
-                className="mt-2.5 w-full rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink disabled:opacity-40"
-              >
-                {cancelling ? "Cancelling…" : "Cancel subscription"}
-              </button>
-            )}
           </div>
 
           <div className="p-2">
+            <Link
+              href="/account"
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-faint hover:bg-paper-dim hover:text-ink transition-colors"
+            >
+              <UserCircle size={15} /> My Profile
+            </Link>
             <button
               onClick={() => setConfirmingLogout(true)}
               className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-faint hover:bg-paper-dim hover:text-ink transition-colors"
             >
               <LogOut size={15} /> Log out
             </button>
-
-            {!confirmingDelete ? (
-              <button
-                onClick={() => setConfirmingDelete(true)}
-                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-rust-dark hover:bg-rust-light transition-colors"
-              >
-                <Trash2 size={15} /> Delete account
-              </button>
-            ) : (
-              <div className="mt-1 rounded-md bg-rust-light p-3">
-                <p className="flex items-start gap-1.5 text-xs text-rust-dark">
-                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                  This permanently deletes your account, cancels your subscription if any, and can't be undone.
-                </p>
-                <div className="mt-2.5 flex gap-2">
-                  <button
-                    onClick={() => setConfirmingDelete(false)}
-                    disabled={deleting}
-                    className="flex-1 rounded-md border border-paper-line bg-white px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink disabled:opacity-40"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDeleteAccount}
-                    disabled={deleting}
-                    className="flex-1 rounded-md bg-rust px-3 py-1.5 text-xs font-semibold text-white hover:bg-rust-dark disabled:opacity-40 inline-flex items-center justify-center gap-1.5"
-                  >
-                    {deleting ? <Loader2 size={12} className="animate-spin" /> : null}
-                    {deleting ? "Deleting…" : "Yes, delete"}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
