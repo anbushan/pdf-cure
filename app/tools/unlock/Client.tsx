@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { unlockPdf } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -61,7 +62,7 @@ export default function UnlockClient() {
           <Dropzone accept="application/pdf" label="Select a password-protected PDF" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6">
-            <p className="text-sm font-mono text-ink-faint mb-4 truncate">{file.name}</p>
+            <FilePreview file={file} className="mb-4" />
 
             <label className="text-sm font-medium text-ink">Password</label>
             <div className="relative mt-1.5">

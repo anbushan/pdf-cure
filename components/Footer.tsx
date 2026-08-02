@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { CATEGORIES, CATEGORY_TKEY, TOOLS } from "@/lib/toolsConfig";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
-import FeedbackButton from "./FeedbackButton";
 import InstallPrompt from "./InstallPrompt";
 
 export default function Footer() {
@@ -59,7 +58,7 @@ export default function Footer() {
           <p className="eyebrow text-ink-faint">© {new Date().getFullYear()}</p>
         </div>
 
-        <nav className="mt-6 flex flex-wrap gap-x-5 gap-y-2 border-t border-paper-line pt-6 text-xs text-ink-faint">
+        <nav className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-paper-line pt-6 text-xs text-ink-faint">
           <Link href="/features" className="hover:text-ink transition-colors">{t("features")}</Link>
           <Link href="/blog" className="hover:text-ink transition-colors">{t("blog")}</Link>
           <Link href="/faq" className="hover:text-ink transition-colors">{t("faq")}</Link>
@@ -67,12 +66,8 @@ export default function Footer() {
           <Link href="/privacy" className="hover:text-ink transition-colors">{t("privacyPolicy")}</Link>
           <Link href="/terms" className="hover:text-ink transition-colors">{t("termsConditions")}</Link>
           <Link href="/cookies" className="hover:text-ink transition-colors">{t("cookiePolicy")}</Link>
-        </nav>
-
-        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-paper-line pt-6">
-          <FeedbackButton />
           <InstallPrompt />
-        </div>
+        </nav>
       </div>
     </footer>
   );

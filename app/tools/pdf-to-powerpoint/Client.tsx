@@ -6,6 +6,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { pdfToPowerPoint } from "@/lib/pdfTools";
 import { stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -54,7 +55,7 @@ export default function PdfToPowerpointClient() {
           <Dropzone accept="application/pdf" label="Select a PDF to convert" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 text-center">
-            <p className="text-sm font-mono text-ink-faint">{file.name}</p>
+            <FilePreview file={file} className="text-left" />
             <p className="mt-3 text-xs text-ink-faint">
               Each page becomes one slide, rendered as an image — everything lands exactly where it was in the PDF,
               but the slide content isn't editable text/shapes the way a slide built in PowerPoint would be.

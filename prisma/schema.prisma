@@ -210,3 +210,30 @@ model NotificationRead {
   @@unique([notificationId, userId])
   @@index([userId])
 }
+
+/// Admin-configurable pricing tiers shown on /pricing — see lib/plans.ts
+/// (which lazily seeds Free/Pro rows the first time this table is read
+/// empty) and app/pricing/PricingClient.tsx (which renders these
+/// dynamically instead of two hardcoded cards).
+///
+/// `cta` controls the card's button: "free" is the no-signup starting
+/// tier, "checkout" wires to the existing single-price Razorpay flow
+/// (lib/razorpay.ts / Settings.PRO_PLAN_PRICE_INR), and "disabled" shows
+/// a non-clickable "Coming soon" button. Only one plan should be
+/// "checkout" today — enforcement (the actual AI daily limit and
+/// Razorpay charge) still comes from the free/pro Settings values, not
+/// from `dailyAiLimit` here, until multi-tier billing is built; that
+/// field is display copy an admin should keep in sync by hand for now.
+model Plan {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  priceInr     Int      @default(0)
+  dailyAiLimit Int      @default(0)
+  features     String // JSON-encoded string[] of bullet points
+  cta          String   @default("disabled") // free | checkout | disabled
+  order        Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

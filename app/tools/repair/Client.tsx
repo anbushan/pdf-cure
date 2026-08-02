@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { repairPdf, RepairResult } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -57,7 +58,7 @@ export default function RepairPage() {
           <Dropzone accept="application/pdf" label="Select a damaged PDF" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 text-center">
-            <p className="text-sm font-mono text-ink-faint">{file.name}</p>
+            <FilePreview file={file} className="text-left" />
             <p className="mt-3 text-xs text-ink-faint">
               This rebuilds the PDF from scratch, which fixes most "can't open this file" errors caused by a broken
               cross-reference table or a corrupted incremental save. If the file's structure is too damaged to parse at

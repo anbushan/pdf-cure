@@ -4,8 +4,9 @@ import { useState } from "react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
+import SharedFilePreview from "@/components/FilePreview";
 import { comparePdfs, CompareResult } from "@/lib/comparePdfs";
-import { RotateCcw, FileText } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useErrorToast } from "@/components/useErrorToast";
 import { useToast } from "@/components/ToastProvider";
 import { trackEvent } from "@/lib/analytics";
@@ -171,8 +172,7 @@ export default function CompareClient() {
 function FilePreview({ file, onClear }: { file: File; onClear: () => void }) {
   return (
     <div className="paper-stack flex items-center gap-3 p-4">
-      <FileText size={18} className="text-teal-dark shrink-0" />
-      <span className="flex-1 truncate text-sm font-mono">{file.name}</span>
+      <SharedFilePreview file={file} className="flex-1 border-0 bg-transparent p-0" />
       <button onClick={onClear} className="text-xs font-medium text-rust-dark shrink-0">
         Change
       </button>

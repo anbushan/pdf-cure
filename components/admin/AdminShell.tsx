@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { LayoutDashboard, Users, Settings, MessageSquarePlus, CreditCard, Tag, ScrollText, Bell, LogOut, Menu, X, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Users, Settings, MessageSquarePlus, CreditCard, Tag, Layers, ScrollText, Bell, LogOut, Menu, X, ExternalLink } from "lucide-react";
 import ConfirmDialog from "../ConfirmDialog";
 
 const NAV = [
@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/feedback", label: "Feedback", icon: MessageSquarePlus },
   { href: "/admin/payments", label: "Payments", icon: CreditCard },
   { href: "/admin/pricing", label: "Pricing", icon: Tag },
+  { href: "/admin/plans", label: "Plans", icon: Layers },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/audit", label: "Audit logs", icon: ScrollText },
   { href: "/admin/settings", label: "Configuration", icon: Settings },

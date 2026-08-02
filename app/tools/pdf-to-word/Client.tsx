@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { pdfToWord } from "@/lib/pdfTools";
 import { downloadBytes, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -54,7 +55,7 @@ export default function PdfToWordPage() {
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 text-center">
-            <p className="text-sm font-mono text-ink-faint">{file.name}</p>
+            <FilePreview file={file} className="text-left" />
             <p className="mt-3 text-xs text-ink-faint">
               This pulls out the text only — layout, columns, images, and tables aren't reconstructed. For a scanned PDF with no
               selectable text, this won't find anything to extract.

@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { pdfToPdfA } from "@/lib/pdfTools";
 import { downloadBytes, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -52,7 +53,7 @@ export default function PdfToPdfAPage() {
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 text-center">
-            <p className="text-sm font-mono text-ink-faint">{file.name}</p>
+            <FilePreview file={file} className="text-left" />
             <p className="mt-3 text-xs text-ink-faint">
               Adds PDF/A-1B archival metadata and rebuilds the file cleanly. This is a best-effort conversion — it
               doesn't verify every font is embedded or attach a color profile, both of which strict validators (like

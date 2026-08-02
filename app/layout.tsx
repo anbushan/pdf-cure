@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ToastProvider";
 import CookieBanner from "@/components/CookieBanner";
 import ScrollToTop from "@/components/ScrollToTop";
+import FeedbackButton from "@/components/FeedbackButton";
 import { SITE_URL, SITE_NAME } from "@/lib/pageMetadata";
 
 // Inter — same typeface used on nextjs.org alongside Geist; clean, geometric, excellent legibility
@@ -123,6 +124,7 @@ export default function RootLayout({
                 <Footer />
                 <CookieBanner />
                 <ScrollToTop />
+                <FeedbackButton />
               </ToastProvider>
             </LanguageProvider>
           </ThemeProvider>

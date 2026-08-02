@@ -6,6 +6,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { getPdfPageCount } from "@/lib/pdfRender";
 import { parseRanges, splitByRanges } from "@/lib/pdfTools";
 import { stripExt } from "@/lib/download";
@@ -76,7 +77,7 @@ export default function SplitPage() {
           <Dropzone accept="application/pdf" label="Select a PDF to split" onFiles={handleFile} />
         ) : (
           <div className="paper-stack p-6">
-            <p className="text-sm font-mono text-ink-faint">{file.name} · {pageCount} pages</p>
+            <FilePreview file={file} className="mb-5" />
             <label className="mt-5 block text-sm font-medium text-ink">Page ranges</label>
             <input
               value={ranges}

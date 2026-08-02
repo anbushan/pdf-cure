@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { compressPdf, CompressResult } from "@/lib/pdfTools";
 import { downloadPdf, formatBytes, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -62,7 +63,7 @@ export default function CompressPage() {
           <Dropzone accept="application/pdf" label="Select a PDF to compress" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6">
-            <p className="text-sm font-mono text-ink-faint">{file.name} · {formatBytes(file.size)}</p>
+            <FilePreview file={file} className="mb-4" />
             <p className="mt-4 text-sm font-medium text-ink">Compression level</p>
             <div className="mt-2 space-y-2">
               {LEVELS.map((l) => (

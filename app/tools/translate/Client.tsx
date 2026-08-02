@@ -6,6 +6,7 @@ import { LOCALES } from "@/lib/i18n/locales";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { extractPdfText } from "@/lib/extractText";
 import { translatedTextToPdf } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
@@ -109,7 +110,7 @@ export default function TranslateClient() {
               </>
             ) : (
               <div className="paper-stack p-6">
-                <p className="text-sm font-mono text-ink-faint mb-4 truncate">{file.name}</p>
+                <FilePreview file={file} className="mb-4" />
 
                 <label className="text-sm font-medium text-ink">Translate to</label>
                 <select

@@ -30,6 +30,9 @@ const ACTION_LABELS: Record<string, string> = {
   notification_created: "Notification created",
   notification_updated: "Notification updated",
   notification_deleted: "Notification deleted",
+  plan_created: "Plan created",
+  plan_updated: "Plan updated",
+  plan_deleted: "Plan deleted",
 };
 
 const ACTION_STYLES: Record<string, string> = {
@@ -38,6 +41,9 @@ const ACTION_STYLES: Record<string, string> = {
   notification_created: "bg-violet-light text-violet-dark",
   notification_updated: "bg-violet-light text-violet-dark",
   notification_deleted: "bg-rust-light text-rust-dark",
+  plan_created: "bg-teal-light text-teal-dark",
+  plan_updated: "bg-teal-light text-teal-dark",
+  plan_deleted: "bg-rust-light text-rust-dark",
   admin_granted: "bg-violet-light text-violet-dark",
 };
 

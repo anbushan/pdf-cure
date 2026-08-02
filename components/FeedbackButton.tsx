@@ -8,6 +8,7 @@ import { useLanguage } from "./LanguageProvider";
 
 export default function FeedbackButton() {
   const { t } = useLanguage();
+  const pathname = usePathname();
   const TYPES: { key: "feedbackBug" | "feedbackIdea" | "feedbackOther"; value: string }[] = [
     { key: "feedbackBug", value: "Bug" },
     { key: "feedbackIdea", value: "Idea" },
@@ -22,9 +23,10 @@ export default function FeedbackButton() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
+
+  const suppressed = pathname?.startsWith("/admin") || pathname?.startsWith("/scan/");
 
   useEffect(() => {
     if (!open) return;
@@ -136,13 +138,17 @@ export default function FeedbackButton() {
     </div>
   );
 
+  if (suppressed) return null;
+
   return (
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink hover:border-ink-faint/40 transition-colors"
+        title={t("feedback")}
+        aria-label={t("feedback")}
+        className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-ink text-paper shadow-card transition-transform hover:scale-105 hover:bg-ink-soft"
       >
-        <MessageSquarePlus size={13} /> {t("feedback")}
+        <MessageSquarePlus size={20} />
       </button>
       {mounted && modal ? createPortal(modal, document.body) : null}
     </>

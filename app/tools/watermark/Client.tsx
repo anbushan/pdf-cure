@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { addWatermark } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -63,6 +64,7 @@ export default function WatermarkPage() {
           <Dropzone accept="application/pdf" label="Select a PDF to watermark" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 space-y-5">
+            <FilePreview file={file} />
             <div>
               <label className="text-sm font-medium text-ink">Watermark text</label>
               <input

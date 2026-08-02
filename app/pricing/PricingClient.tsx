@@ -20,6 +20,18 @@ interface PublicConfig {
   PRO_DAILY_LIMIT_PER_FEATURE?: string;
 }
 
+interface PlanView {
+  id: string;
+  name: string;
+  description: string;
+  priceInr: number;
+  dailyAiLimit: number;
+  features: string[];
+  cta: "free" | "checkout" | "disabled";
+  order: number;
+  active: boolean;
+}
+
 function loadCheckoutScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.Razorpay) return resolve();
@@ -34,25 +46,29 @@ function loadCheckoutScript(): Promise<void> {
 interface PricingClientProps {
   config: PublicConfig;
   currency: string;
+  plans: PlanView[];
 }
 
 /**
- * Takes its initial config/currency as props, fetched server-side by
- * page.tsx — previously this fetched both on mount, so every visit
- * briefly rendered the hardcoded ₹499 fallback before the real
- * admin-configured price arrived, which was very visible as a flicker
- * right after an admin changed the price and reloaded to check it.
+ * Plans render dynamically from the `plans` prop (admin-configurable —
+ * see /admin/plans) instead of two hardcoded cards. The "checkout" plan
+ * still displays the live Settings price (config.PRO_PLAN_PRICE_INR),
+ * not its own stored priceInr — that Settings value is what Razorpay
+ * actually charges, so showing anything else risks a price that doesn't
+ * match the real charge if an admin edits the two independently.
+ *
+ * config/currency/plans all arrive as props, fetched server-side by
+ * page.tsx — see that file's comment for why (avoids a fallback-price
+ * flicker on every visit).
  */
-export default function PricingPage({ config, currency }: PricingClientProps) {
+export default function PricingPage({ config, currency, plans }: PricingClientProps) {
   const { data: session, status, update } = useSession();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
-  const plan = session?.user?.plan ?? "free";
-  const priceInr = parseInt(config.PRO_PLAN_PRICE_INR ?? "499", 10);
-  const freeLimit = config.FREE_DAILY_LIMIT ?? "1";
-  const proLimit = config.PRO_DAILY_LIMIT_PER_FEATURE ?? "20";
+  const userPlan = session?.user?.plan ?? "free";
+  const settingsPriceInr = parseInt(config.PRO_PLAN_PRICE_INR ?? "499", 10);
 
   async function handleUpgrade() {
     if (status === "unauthenticated") {
@@ -123,88 +139,82 @@ export default function PricingPage({ config, currency }: PricingClientProps) {
   return (
     <div className="pb-24">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Pricing" }]} />
-      <div className="mx-auto max-w-4xl px-6 pt-6 text-center">
+      <div className="mx-auto max-w-5xl px-6 pt-6 text-center">
         <h1 className="font-display text-4xl font-bold tracking-tight text-ink">Simple pricing</h1>
         <p className="mt-3 text-lg text-ink-faint">
           Every editing tool is free forever, no account needed. Pro is only about the AI tools and removing ads.
         </p>
 
-        <div className="mt-10 grid grid-cols-1 gap-6 text-left sm:grid-cols-2">
-          {/* Free */}
-          <div className="paper-stack p-8">
-            <h2 className="font-display text-xl font-semibold text-ink">Free</h2>
-            <p className="mt-1 text-3xl font-bold text-ink">₹0</p>
-            <p className="mt-1 text-sm text-ink-faint">Forever</p>
-            <ul className="mt-6 space-y-3 text-sm text-ink">
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> Every editing &amp; conversion tool,
-                unlimited, no account
-              </li>
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> {freeLimit} AI action per day (shared
-                across all AI tools)
-              </li>
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> Google Drive import
-              </li>
-              <li className="flex items-start gap-2 text-ink-faint">
-                <span className="mt-0.5 shrink-0">–</span> Ads shown
-              </li>
-            </ul>
-            {plan === "free" && session && (
-              <p className="mt-6 rounded-md bg-paper-dim px-3 py-2 text-center text-sm font-medium text-ink-faint">
-                Your current plan
-              </p>
-            )}
-          </div>
+        <div className="mt-10 grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-3">
+          {plans.map((plan) => {
+            const isCheckout = plan.cta === "checkout";
+            const displayPriceInr = isCheckout ? settingsPriceInr : plan.priceInr;
+            const isCurrent = session && ((plan.cta === "free" && userPlan === "free") || (isCheckout && userPlan === "pro"));
 
-          {/* Pro */}
-          <div className="paper-stack p-8 border-amber ring-1 ring-amber">
-            <span className="eyebrow text-amber-dark">Pro</span>
-            <p className="mt-2 text-3xl font-bold text-ink">
-              {formatCurrency(priceInr, currency)}
-              <span className="text-base font-normal text-ink-faint"> / month</span>
-            </p>
-            <p className="mt-1 text-sm text-ink-faint">
-              Cancel anytime{currency !== "INR" && ` · billed as ₹${priceInr} (INR) via Razorpay`}
-            </p>
-            <ul className="mt-6 space-y-3 text-sm text-ink">
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> Everything in Free
-              </li>
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> {proLimit} AI actions per day, for{" "}
-                <strong>each</strong> AI tool
-              </li>
-              <li className="flex items-start gap-2">
-                <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> No ads, anywhere on the site
-              </li>
-            </ul>
-
-            {plan === "pro" ? (
-              <div className="mt-6 space-y-2">
-                <p className="rounded-md bg-teal-light px-3 py-2 text-center text-sm font-medium text-teal-dark">
-                  You're on Pro
-                </p>
-                <button
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                  className="w-full rounded-md border border-paper-line px-4 py-2 text-sm font-medium text-ink-faint hover:text-ink disabled:opacity-40"
-                >
-                  {cancelling ? "Cancelling…" : "Cancel subscription"}
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={handleUpgrade}
-                disabled={busy || status === "loading"}
-                className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-amber px-5 py-2.5 text-sm font-semibold text-ink hover:bg-amber-dark disabled:opacity-40"
+            return (
+              <div
+                key={plan.id}
+                className={`paper-stack p-8 ${isCheckout ? "border-amber ring-1 ring-amber" : ""}`}
               >
-                {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
-                {status === "unauthenticated" ? "Sign in to upgrade" : busy ? "Opening checkout…" : "Upgrade to Pro"}
-              </button>
-            )}
-          </div>
+                {isCheckout ? (
+                  <span className="eyebrow text-amber-dark">{plan.name}</span>
+                ) : (
+                  <h2 className="font-display text-xl font-semibold text-ink">{plan.name}</h2>
+                )}
+                <p className={isCheckout ? "mt-2 text-3xl font-bold text-ink" : "mt-1 text-3xl font-bold text-ink"}>
+                  {displayPriceInr === 0 ? "₹0" : formatCurrency(displayPriceInr, currency)}
+                  {displayPriceInr > 0 && <span className="text-base font-normal text-ink-faint"> / month</span>}
+                </p>
+                <p className="mt-1 text-sm text-ink-faint">
+                  {plan.description}
+                  {isCheckout && currency !== "INR" && ` · billed as ₹${settingsPriceInr} (INR) via Razorpay`}
+                </p>
+
+                {plan.features.length > 0 && (
+                  <ul className="mt-6 space-y-3 text-sm text-ink">
+                    {plan.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> {feature}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {isCurrent && (
+                  <p
+                    className={`mt-6 rounded-md px-3 py-2 text-center text-sm font-medium ${
+                      isCheckout ? "bg-teal-light text-teal-dark" : "bg-paper-dim text-ink-faint"
+                    }`}
+                  >
+                    {isCheckout ? "You're on Pro" : "Your current plan"}
+                  </p>
+                )}
+
+                {isCheckout && userPlan === "pro" ? (
+                  <button
+                    onClick={handleCancel}
+                    disabled={cancelling}
+                    className="mt-2 w-full rounded-md border border-paper-line px-4 py-2 text-sm font-medium text-ink-faint hover:text-ink disabled:opacity-40"
+                  >
+                    {cancelling ? "Cancelling…" : "Cancel subscription"}
+                  </button>
+                ) : isCheckout ? (
+                  <button
+                    onClick={handleUpgrade}
+                    disabled={busy || status === "loading"}
+                    className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-md bg-amber px-5 py-2.5 text-sm font-semibold text-ink hover:bg-amber-dark disabled:opacity-40"
+                  >
+                    {busy ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                    {status === "unauthenticated" ? "Sign in to upgrade" : busy ? "Opening checkout…" : `Upgrade to ${plan.name}`}
+                  </button>
+                ) : plan.cta === "disabled" ? (
+                  <button disabled className="mt-6 w-full cursor-not-allowed rounded-md border border-paper-line px-4 py-2.5 text-sm font-medium text-ink-faint opacity-60">
+                    Coming soon
+                  </button>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
 
         <p className="mx-auto mt-8 max-w-lg text-xs text-ink-faint">

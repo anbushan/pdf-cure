@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { powerPointToPdf } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -48,7 +49,7 @@ export default function PowerpointToPdfClient() {
           <Dropzone accept=".pptx" label="Select a .pptx file" hint="Only the .pptx format is supported (not the older .ppt)" onFiles={(f) => setFile(f[0])} />
         ) : (
           <div className="paper-stack p-6 text-center">
-            <p className="text-sm font-mono text-ink-faint">{file.name}</p>
+            <FilePreview file={file} className="text-left" />
             <p className="mt-3 text-xs text-ink-faint">
               This pulls the text out of each slide and lays it out as one PDF page per slide. Shapes, precise
               positioning, images, and slide design don't carry over — it's a text-content extraction, not a visual
