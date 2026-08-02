@@ -19,13 +19,18 @@ a day total, Pro accounts (₹499/mo by default, admin-editable) get 20 per day
   Google sign-in with a daily quota that depends on plan.
 - **Pro plan** (`/pricing`) — Razorpay subscription that removes ads and
   raises the AI quota. Fully self-serve: upgrade, cancel anytime (access
-  continues until the paid period ends).
+  continues until the paid period ends), or delete the account entirely —
+  all from the account menu under the avatar in the header. Price is
+  charged in INR always, but displayed converted to the visitor's local
+  currency (best-effort IP geolocation, see `lib/currency.ts`).
 - **Google Drive import** — pick a file straight from Drive instead of local
   upload, available on every tool once configured.
 - **Admin panel** (`/admin`) — signed-in-user list, feedback inbox, payment
   history, and settings screens (technical credentials + business
   price/limits) that take effect immediately with no redeploy.
 - Multi-language UI (26 locales), PWA installable, optional AdSense/GA.
+- Lighthouse performance ≥ 95 on both mobile and desktop for every public
+  page (homepage, tool pages, pricing) — see *Performance* below.
 
 ## Tech stack
 
@@ -165,6 +170,45 @@ Depends on plan (numbers below are the defaults — both are editable from
 Either way, the quota resets at midnight UTC and is only consumed after a
 successful response, so a failed request (bad API key, network error, etc.)
 doesn't burn it.
+
+## Account menu
+
+Click the avatar in the header once signed in: shows the current plan (with
+renewal date if Pro), a **Cancel subscription** button for Pro accounts
+(same effect as the one on `/pricing`), and **Delete account** — a
+two-step-confirm action that cancels any active Razorpay subscription
+immediately (not at cycle end, since there'll be no account left to keep
+serving) and deletes the account. Sessions, linked Google account, AI usage
+history, and payment records all cascade-delete with it (see
+`prisma/schema.prisma`); feedback submissions aren't linked to accounts, so
+they're unaffected.
+
+## Currency display
+
+`/pricing` shows the Pro price converted to the visitor's local currency,
+based on a best-effort IP geolocation lookup (`app/api/geo`, via the free
+[ipapi.co](https://ipapi.co) API — no key needed, ~1,000 lookups/day on
+their free tier, cached per-IP for an hour to stay well under that). **The
+actual Razorpay charge is always in INR** regardless of what's displayed —
+the conversion is a static, hand-maintained rate table in `lib/currency.ts`
+for display only, not a live FX feed, and the page says so explicitly
+("billed as ₹499 (INR) via Razorpay") whenever the shown currency isn't
+INR. If the geolocation lookup fails or times out, it silently falls back
+to showing the INR price — this never blocks or gates checkout itself.
+
+## Performance
+
+Every public page is built to score 95+ on Lighthouse performance, both
+mobile and desktop presets, measured against a production build (`npm run
+build && npm run start` — dev-mode scores are meaningfully lower and not
+representative). The one non-obvious fix worth knowing about: the AI tool
+pages' sign-in/quota gate (`components/AiGate.tsx`) is a Server Component,
+not a client-side session fetch — an earlier client-rendered version added
+several seconds of pure render-delay to Largest Contentful Paint waiting on
+`useSession()` and a follow-up API call. If you're adding new
+account-aware UI to a page that needs to stay fast, prefer resolving
+session/plan state server-side (`lib/getSession.ts`) over a client fetch
+where possible.
 
 ## Deployment notes
 

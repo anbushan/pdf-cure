@@ -6,6 +6,7 @@ declare module "next-auth" {
       id: string;
       isAdmin: boolean;
       plan: "free" | "pro";
+      planExpiresAt: string | null;
     } & DefaultSession["user"];
   }
 }

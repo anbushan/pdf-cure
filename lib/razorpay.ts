@@ -65,12 +65,16 @@ export async function createSubscription(input: { userId: string; email: string;
   });
 }
 
-export async function cancelSubscription(subscriptionId: string) {
+/**
+ * `atCycleEnd: true` (the default) leaves access in place until the
+ * already-paid-for period runs out — used when someone cancels but keeps
+ * their account. `false` stops billing immediately — used when deleting
+ * the account outright, since there's no account left to keep serving.
+ */
+export async function cancelSubscription(subscriptionId: string, atCycleEnd = true) {
   const client = await getRazorpayClient();
   if (!client) throw new Error("Razorpay isn't configured yet.");
-  // cancel_at_cycle_end: true — access continues until the period already
-  // paid for runs out, rather than cutting off immediately.
-  return client.subscriptions.cancel(subscriptionId, true);
+  return client.subscriptions.cancel(subscriptionId, atCycleEnd);
 }
 
 /** HMAC-SHA256 verification shared by both the checkout-success callback and the webhook — same algorithm, different payload shape. */

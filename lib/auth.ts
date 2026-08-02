@@ -35,6 +35,7 @@ export async function buildAuthOptions(): Promise<AuthOptions> {
           session.user.isAdmin = u.isAdmin ?? false;
           const isPro = u.plan === "pro" && !!u.planExpiresAt && u.planExpiresAt.getTime() > Date.now();
           session.user.plan = isPro ? "pro" : "free";
+          session.user.planExpiresAt = isPro ? u.planExpiresAt!.toISOString() : null;
         }
         return session;
       },

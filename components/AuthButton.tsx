@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { LogOut } from "lucide-react";
+import { LogOut, Sparkle, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { useToast } from "./ToastProvider";
 
 function GoogleMark() {
   return (
@@ -14,8 +17,45 @@ function GoogleMark() {
   );
 }
 
+function Avatar({ session, size = 28 }: { session: NonNullable<ReturnType<typeof useSession>["data"]>; size?: number }) {
+  return session.user?.image ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={session.user.image}
+      alt={session.user.name ?? "Account"}
+      referrerPolicy="no-referrer"
+      className="rounded-full shrink-0"
+      style={{ height: size, width: size }}
+    />
+  ) : (
+    <div
+      className="rounded-full bg-ink text-paper flex items-center justify-center text-xs font-semibold shrink-0"
+      style={{ height: size, width: size }}
+    >
+      {(session.user?.name ?? session.user?.email ?? "?").charAt(0).toUpperCase()}
+    </div>
+  );
+}
+
 export default function AuthButton() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setConfirmingDelete(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   if (status === "loading") return <div className="h-8 w-8" />;
 
@@ -30,29 +70,129 @@ export default function AuthButton() {
     );
   }
 
+  const isPro = session.user.plan === "pro";
+
+  async function handleCancelSubscription() {
+    setCancelling(true);
+    try {
+      const res = await fetch("/api/razorpay/cancel", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Couldn't cancel.");
+      toast.success("Subscription cancelled — you'll keep Pro until the current period ends.");
+      await update();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't cancel.");
+    } finally {
+      setCancelling(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/account/delete", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Couldn't delete your account.");
+      await signOut({ callbackUrl: "/" });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't delete your account.");
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
+  }
+
   return (
-    <div className="flex items-center gap-1.5">
-      {session.user?.image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={session.user.image}
-          alt={session.user.name ?? "Account"}
-          referrerPolicy="no-referrer"
-          className="h-7 w-7 rounded-full"
-        />
-      ) : (
-        <div className="h-7 w-7 rounded-full bg-ink text-paper flex items-center justify-center text-xs font-semibold">
-          {(session.user?.name ?? session.user?.email ?? "?").charAt(0).toUpperCase()}
+    <div className="relative" ref={containerRef}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Account menu"
+        aria-expanded={open}
+        className="flex items-center justify-center rounded-full transition-opacity hover:opacity-80"
+      >
+        <Avatar session={session} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-72 rounded-md border border-paper-line bg-white shadow-card z-50 overflow-hidden">
+          <div className="flex items-center gap-3 border-b border-paper-line p-4">
+            <Avatar session={session} size={36} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-ink">{session.user.name}</p>
+              <p className="truncate text-xs text-ink-faint">{session.user.email}</p>
+            </div>
+          </div>
+
+          <div className="p-4 border-b border-paper-line">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink">
+                <Sparkle size={14} className={isPro ? "text-amber-dark" : "text-ink-faint"} />
+                {isPro ? "Pro plan" : "Free plan"}
+              </span>
+              {!isPro && (
+                <Link href="/pricing" onClick={() => setOpen(false)} className="text-xs font-medium text-amber-dark hover:underline">
+                  Upgrade
+                </Link>
+              )}
+            </div>
+            {isPro && session.user.planExpiresAt && (
+              <p className="mt-1 text-xs text-ink-faint">
+                Renews {new Date(session.user.planExpiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+              </p>
+            )}
+            {isPro && (
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelling}
+                className="mt-2.5 w-full rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink disabled:opacity-40"
+              >
+                {cancelling ? "Cancelling…" : "Cancel subscription"}
+              </button>
+            )}
+          </div>
+
+          <div className="p-2">
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-ink-faint hover:bg-paper-dim hover:text-ink transition-colors"
+            >
+              <LogOut size={15} /> Log out
+            </button>
+
+            {!confirmingDelete ? (
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-rust-dark hover:bg-rust-light transition-colors"
+              >
+                <Trash2 size={15} /> Delete account
+              </button>
+            ) : (
+              <div className="mt-1 rounded-md bg-rust-light p-3">
+                <p className="flex items-start gap-1.5 text-xs text-rust-dark">
+                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
+                  This permanently deletes your account, cancels your subscription if any, and can't be undone.
+                </p>
+                <div className="mt-2.5 flex gap-2">
+                  <button
+                    onClick={() => setConfirmingDelete(false)}
+                    disabled={deleting}
+                    className="flex-1 rounded-md border border-paper-line bg-white px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                    className="flex-1 rounded-md bg-rust px-3 py-1.5 text-xs font-semibold text-white hover:bg-rust-dark disabled:opacity-40 inline-flex items-center justify-center gap-1.5"
+                  >
+                    {deleting ? <Loader2 size={12} className="animate-spin" /> : null}
+                    {deleting ? "Deleting…" : "Yes, delete"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       )}
-      <button
-        onClick={() => signOut()}
-        title="Log out"
-        aria-label="Log out"
-        className="flex items-center justify-center h-8 w-8 rounded-md text-ink-faint hover:text-ink hover:bg-paper-dim transition-colors"
-      >
-        <LogOut size={16} />
-      </button>
     </div>
   );
 }

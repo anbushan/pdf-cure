@@ -5,6 +5,7 @@ import { useSession, signIn } from "next-auth/react";
 import { Check, Sparkles, Loader2 } from "lucide-react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useToast } from "@/components/ToastProvider";
+import { formatCurrency } from "@/lib/currency";
 
 declare global {
   interface Window {
@@ -34,6 +35,7 @@ export default function PricingPage() {
   const { data: session, status, update } = useSession();
   const toast = useToast();
   const [config, setConfig] = useState<PublicConfig | null>(null);
+  const [currency, setCurrency] = useState("INR");
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
@@ -42,10 +44,14 @@ export default function PricingPage() {
       .then((r) => r.json())
       .then(setConfig)
       .catch(() => setConfig({}));
+    fetch("/api/geo")
+      .then((r) => r.json())
+      .then((data) => setCurrency(data.currency ?? "INR"))
+      .catch(() => setCurrency("INR"));
   }, []);
 
   const plan = session?.user?.plan ?? "free";
-  const price = config?.PRO_PLAN_PRICE_INR ?? "499";
+  const priceInr = parseInt(config?.PRO_PLAN_PRICE_INR ?? "499", 10);
   const freeLimit = config?.FREE_DAILY_LIMIT ?? "1";
   const proLimit = config?.PRO_DAILY_LIMIT_PER_FEATURE ?? "20";
 
@@ -157,10 +163,12 @@ export default function PricingPage() {
           <div className="paper-stack p-8 border-amber ring-1 ring-amber">
             <span className="eyebrow text-amber-dark">Pro</span>
             <p className="mt-2 text-3xl font-bold text-ink">
-              ₹{price}
+              {formatCurrency(priceInr, currency)}
               <span className="text-base font-normal text-ink-faint"> / month</span>
             </p>
-            <p className="mt-1 text-sm text-ink-faint">Cancel anytime</p>
+            <p className="mt-1 text-sm text-ink-faint">
+              Cancel anytime{currency !== "INR" && ` · billed as ₹${priceInr} (INR) via Razorpay`}
+            </p>
             <ul className="mt-6 space-y-3 text-sm text-ink">
               <li className="flex items-start gap-2">
                 <Check size={16} className="mt-0.5 shrink-0 text-teal-dark" /> Everything in Free
