@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { CATEGORIES, CATEGORY_TKEY, TOOLS } from "@/lib/toolsConfig";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
+import FeedbackButton from "./FeedbackButton";
+import InstallPrompt from "./InstallPrompt";
 
 export default function Footer() {
   const { t, locale } = useLanguage();
@@ -66,6 +68,11 @@ export default function Footer() {
           <Link href="/terms" className="hover:text-ink transition-colors">{t("termsConditions")}</Link>
           <Link href="/cookies" className="hover:text-ink transition-colors">{t("cookiePolicy")}</Link>
         </nav>
+
+        <div className="mt-6 flex flex-wrap items-center gap-2 border-t border-paper-line pt-6">
+          <FeedbackButton />
+          <InstallPrompt />
+        </div>
       </div>
     </footer>
   );

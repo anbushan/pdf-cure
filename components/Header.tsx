@@ -5,8 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import InstallPrompt from "./InstallPrompt";
-import FeedbackButton from "./FeedbackButton";
+import QuickSearch from "./QuickSearch";
 import LanguageSwitcher from "./LanguageSwitcher";
 import ThemeToggle from "./ThemeToggle";
 import AuthButton from "./AuthButton";
@@ -26,8 +25,6 @@ export default function Header() {
     { href: "/#edit",     label: t("catEdit"),     className: "text-ink-faint hover:text-ink" },
     { href: "/#security", label: t("catSecurity"), className: "text-ink-faint hover:text-ink" },
     { href: "/pricing",   label: "Pricing",         className: "text-ink-faint hover:text-ink" },
-    { href: "/blog",      label: t("blog"),        className: "text-ink-faint hover:text-ink" },
-    { href: "/features",  label: t("features"),    className: "text-ink-faint hover:text-ink" },
   ];
 
   return (
@@ -61,14 +58,9 @@ export default function Header() {
 
         {/* Right controls */}
         <div className="flex items-center gap-1.5 shrink-0 sm:gap-2">
+          <QuickSearch />
           <ThemeToggle />
           <LanguageSwitcher />
-          <div className="hidden sm:block">
-            <FeedbackButton />
-          </div>
-          <div className="hidden sm:block">
-            <InstallPrompt />
-          </div>
           <AuthButton />
 
           {/* Hamburger — visible below lg */}
@@ -96,10 +88,6 @@ export default function Header() {
                 {l.label}
               </Link>
             ))}
-            <div className="flex items-center gap-2 pt-3">
-              <FeedbackButton />
-              <InstallPrompt />
-            </div>
           </nav>
         </div>
       )}

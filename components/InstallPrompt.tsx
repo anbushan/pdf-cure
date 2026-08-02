@@ -24,7 +24,7 @@ export default function InstallPrompt() {
         await promptEvent.userChoice;
         setPromptEvent(null);
       }}
-      className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink hover:border-ink-faint/40 transition-colors"
+      className="inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink hover:border-ink-faint/40 transition-colors"
     >
       <Download size={13} /> Install app
     </button>

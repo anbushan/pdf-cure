@@ -4,6 +4,7 @@ import AdSlot from "@/components/AdSlot";
 import HeroText from "@/components/HeroText";
 import TrustSection from "@/components/TrustSection";
 import HeroBadges from "@/components/HeroBadges";
+import SignInSection from "@/components/SignInSection";
 
 export default function Home() {
   return (
@@ -12,10 +13,6 @@ export default function Home() {
         <HeroText />
         <HeroBadges />
       </section>
-
-      <div className="mx-auto max-w-6xl px-6">
-        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME ?? ""} minHeight={90} className="mb-4" />
-      </div>
 
       {CATEGORIES.map((category) => {
         const tools = TOOLS.filter((t) => t.category === category);
@@ -31,7 +28,13 @@ export default function Home() {
         );
       })}
 
+      <div className="mx-auto max-w-6xl px-6">
+        <AdSlot slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME ?? ""} minHeight={90} className="mb-4" />
+      </div>
+
       <TrustSection />
+
+      <SignInSection />
     </div>
   );
 }
