@@ -678,6 +678,252 @@ export async function powerPointToPdf(file: File): Promise<Uint8Array> {
   return htmlToPdf(`<div style="font-family: sans-serif;">${html}</div>`);
 }
 
+/* ---------------------------- PDF to Excel ---------------------------- */
+
+/**
+ * Extracts text with its on-page position (via pdf.js) and reconstructs
+ * rows/columns from that geometry: items on roughly the same line become
+ * a row, and gaps between items wider than the surrounding text become
+ * column breaks. This is position-based heuristic table detection, not
+ * real structure recognition — true table detection needs a layout
+ * model — but it recovers simple tables well. Each PDF page becomes its
+ * own sheet.
+ */
+export async function pdfToExcel(file: File): Promise<Uint8Array> {
+  const XLSX = await import("xlsx");
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+  const workbook = XLSX.utils.book_new();
+  let sheetCount = 0;
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const items = (textContent.items as any[])
+      .filter((it) => typeof it.str === "string" && it.str.trim() !== "")
+      .map((it) => ({
+        text: it.str as string,
+        x: it.transform[4] as number,
+        y: it.transform[5] as number,
+        width: (it.width as number) || it.str.length * 4,
+        height: (it.height as number) || Math.abs(it.transform[3] as number) || 10,
+      }));
+    if (items.length === 0) continue;
+
+    // Group into lines: PDF y grows upward, so sort top-to-bottom then left-to-right.
+    items.sort((a, b) => b.y - a.y || a.x - b.x);
+    const lineTolerance = 4;
+    const lines: (typeof items)[] = [];
+    for (const it of items) {
+      const last = lines[lines.length - 1];
+      if (last && Math.abs(last[0].y - it.y) <= lineTolerance) {
+        last.push(it);
+      } else {
+        lines.push([it]);
+      }
+    }
+
+    const rows: string[][] = lines.map((line) => {
+      line.sort((a, b) => a.x - b.x);
+      // A column break is a gap much wider than a normal word space. Word
+      // spaces scale with font size, not with how far apart this page's
+      // columns happen to be, so the threshold is based on the line's own
+      // font size (its item height) rather than on the gaps being measured.
+      const medianHeight = [...line.map((it) => it.height)].sort((a, b) => a - b)[Math.floor(line.length / 2)];
+      const columnGap = Math.max(10, medianHeight * 1.5);
+
+      const cells: string[] = [];
+      let current = line[0].text;
+      let prevEnd = line[0].x + line[0].width;
+      for (let k = 1; k < line.length; k++) {
+        const it = line[k];
+        const gap = it.x - prevEnd;
+        if (gap > columnGap) {
+          cells.push(current.trim());
+          current = it.text;
+        } else {
+          current += (gap > 1 ? " " : "") + it.text;
+        }
+        prevEnd = it.x + it.width;
+      }
+      cells.push(current.trim());
+      return cells;
+    });
+
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, sheet, `Page ${i}`.slice(0, 31));
+    sheetCount++;
+  }
+
+  if (sheetCount === 0) {
+    throw new Error("Couldn't find any selectable text in this PDF — scanned pages need OCR first.");
+  }
+
+  return new Uint8Array(XLSX.write(workbook, { type: "array", bookType: "xlsx" }));
+}
+
+/* ---------------------------- Repair PDF ---------------------------- */
+
+export interface RepairResult {
+  bytes: Uint8Array;
+  pagesRecovered: number;
+  totalPages: number;
+  /** true if structural recovery failed and pages were rebuilt from rendered images instead. */
+  usedImageFallback: boolean;
+}
+
+/**
+ * Rebuilds a PDF from scratch rather than patching it in place — the same
+ * trick most "repair" tools use, since a from-scratch rewrite of the
+ * object table and xref fixes the broken xref/incremental-update
+ * corruption that causes most "can't open this PDF" errors. If pdf-lib's
+ * parser can't make sense of the file at all (more severe corruption),
+ * this falls back to pdf.js — a much more fault-tolerant parser — to
+ * rasterize whatever pages it can still read and rebuilds the file from
+ * those images, trading selectable text for at least getting the content
+ * back.
+ */
+export async function repairPdf(file: File): Promise<RepairResult> {
+  const { PDFDocument } = await getPdfLib();
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  try {
+    const src = await PDFDocument.load(bytes, {
+      ignoreEncryption: true,
+      throwOnInvalidObject: false,
+      updateMetadata: false,
+    });
+    const totalPages = src.getPageCount();
+    const out = await PDFDocument.create();
+    let recovered = 0;
+    for (let i = 0; i < totalPages; i++) {
+      try {
+        const [page] = await out.copyPages(src, [i]);
+        out.addPage(page);
+        recovered++;
+      } catch {
+        // skip pages whose objects are unrecoverable and continue with the rest
+      }
+    }
+    if (recovered > 0) {
+      return { bytes: await out.save(), pagesRecovered: recovered, totalPages, usedImageFallback: false };
+    }
+  } catch {
+    // structural parse failed entirely — fall through to the image-based rebuild
+  }
+
+  const rendered = await renderPdfPages(bytes.buffer as ArrayBuffer, 2, undefined, 0.9).catch(() => []);
+  if (rendered.length === 0) {
+    throw new Error("This PDF is too badly damaged to recover — its structure couldn't be read by either recovery method.");
+  }
+  const out = await PDFDocument.create();
+  for (const page of rendered) {
+    const jpgBytes = dataUrlToBytes(page.dataUrl);
+    const img = await out.embedJpg(jpgBytes);
+    const pdfPage = out.addPage([page.width, page.height]);
+    pdfPage.drawImage(img, { x: 0, y: 0, width: page.width, height: page.height });
+  }
+  return {
+    bytes: await out.save(),
+    pagesRecovered: rendered.length,
+    totalPages: rendered.length,
+    usedImageFallback: true,
+  };
+}
+
+/* ---------------------------- OCR PDF ---------------------------- */
+
+export interface OcrProgress {
+  page: number;
+  totalPages: number;
+  progress: number; // 0-1 within the current page
+}
+
+export interface OcrResult {
+  bytes: Uint8Array;
+  pageCount: number;
+}
+
+/**
+ * Renders each page to an image, runs OCR on it, then rebuilds the PDF
+ * with that image visible and the recognized words placed as invisible
+ * (zero-opacity) text at their detected positions — a "sandwich" PDF,
+ * the same technique dedicated OCR tools use to make a scan
+ * searchable/selectable without changing how it looks. Recognition runs
+ * entirely in the browser via a WebAssembly OCR engine — the file itself
+ * never leaves the device, though the OCR engine and language data are
+ * fetched once from a CDN the first time (same as this app's PDF
+ * renderer fetching its own worker script). Since the placed text is
+ * invisible, its font size is solved from the recognized word's pixel
+ * width rather than its height, so text selection lines up with the
+ * image even though the glyphs never render.
+ */
+export async function ocrPdf(
+  file: File,
+  language: string,
+  onProgress?: (p: OcrProgress) => void
+): Promise<OcrResult> {
+  const { createWorker } = await import("tesseract.js");
+  const { PDFDocument, StandardFonts } = await getPdfLib();
+  const rendered = await renderPdfPages(file, 2, undefined, 0.92);
+  if (rendered.length === 0) {
+    throw new Error("Couldn't read any pages from this PDF.");
+  }
+
+  let currentPage = 0;
+  const worker = await createWorker(language, undefined, {
+    logger: (m) => {
+      if (m.status === "recognizing text") {
+        onProgress?.({ page: currentPage, totalPages: rendered.length, progress: m.progress });
+      }
+    },
+  });
+
+  const out = await PDFDocument.create();
+  const font = await out.embedFont(StandardFonts.Helvetica);
+
+  try {
+    for (const page of rendered) {
+      currentPage = page.index + 1;
+      onProgress?.({ page: currentPage, totalPages: rendered.length, progress: 0 });
+      const { data } = await worker.recognize(page.dataUrl, {}, { blocks: true });
+
+      const jpgBytes = dataUrlToBytes(page.dataUrl);
+      const img = await out.embedJpg(jpgBytes);
+      const pdfPage = out.addPage([page.width, page.height]);
+      pdfPage.drawImage(img, { x: 0, y: 0, width: page.width, height: page.height });
+
+      const words = (data.blocks ?? []).flatMap((b) =>
+        b.paragraphs.flatMap((p) => p.lines.flatMap((l) => l.words))
+      );
+      for (const word of words) {
+        const text = word.text.trim();
+        if (!text) continue;
+        const { x0, y0, x1, y1 } = word.bbox;
+        const boxWidth = x1 - x0;
+        const boxHeight = y1 - y0;
+        if (boxWidth <= 0 || boxHeight <= 0) continue;
+
+        const unitWidth = font.widthOfTextAtSize(text, 1);
+        const fontSize = unitWidth > 0 ? Math.min(Math.max(boxWidth / unitWidth, 3), 400) : boxHeight * 0.85;
+        pdfPage.drawText(text, {
+          x: x0,
+          y: page.height - y1,
+          size: fontSize,
+          font,
+          opacity: 0,
+        });
+      }
+    }
+  } finally {
+    await worker.terminate();
+  }
+
+  return { bytes: await out.save(), pageCount: rendered.length };
+}
+
 /* ---------------------------- shared utils ---------------------------- */
 
 function dataUrlToBytes(dataUrl: string): Uint8Array {

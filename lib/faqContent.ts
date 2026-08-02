@@ -56,6 +56,15 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Why did my file's text become blurry after compressing?", a: "Compression re-renders each page as an image and re-encodes it — it trades sharpness for file size, which is most noticeable on small text at the 'High' setting. Try 'Low' or 'Medium' first." },
     { q: "Will compression remove hyperlinks or form fields?", a: "Yes — because the page is flattened to an image, interactive elements like links and form fields won't survive compression." },
   ],
+  repair: [
+    { q: "What kinds of damage can this actually fix?", a: "It rebuilds the file's internal object table and cross-reference index from scratch, which resolves most 'can't open this file' or 'file is damaged' errors caused by a broken xref table or a corrupted incremental save. It can't fix a file that's simply not a PDF, or recover content that was never saved in the first place." },
+    { q: "What happens if the file is too damaged to rebuild normally?", a: "It falls back to rendering each page it can still read as an image and assembles those into a new PDF. You get your content back visually, but the text is no longer selectable or searchable — that trade-off only kicks in when the normal rebuild fails outright." },
+  ],
+  ocr: [
+    { q: "Will this change how the page looks?", a: "No — the original page image is kept exactly as-is. The recognized text is layered in invisibly underneath, so nothing changes visually, but you can now select, search, and copy the text." },
+    { q: "How accurate is the text recognition?", a: "It depends heavily on scan quality and the language you select — clean, high-resolution scans in the correct language recognize very well, while skewed, low-resolution, or handwritten pages will have more errors. Make sure to pick the right document language before running it." },
+    { q: "Does this upload my file anywhere?", a: "No — recognition runs entirely in your browser using a WebAssembly OCR engine. The only network activity is a one-time download of that engine and its language data, the same way this site's PDF viewer fetches its own rendering engine; your document itself never leaves your device." },
+  ],
   watermark: [
     { q: "Can I add an image watermark instead of text?", a: "Not yet — this tool currently supports text watermarks only." },
     { q: "Will the watermark appear on every page?", a: "Yes, it's applied uniformly across the whole document." },
@@ -95,6 +104,11 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   "excel-to-pdf": [
     { q: "Does this preserve cell formulas?", a: "No — cells convert to their currently displayed values, not their underlying formulas, since a PDF has no concept of formulas." },
     { q: "What if my spreadsheet has multiple sheets?", a: "Every sheet is included, each rendered as its own table with a heading, one after another in the PDF." },
+  ],
+  "pdf-to-excel": [
+    { q: "How does this know what's a table versus regular paragraphs?", a: "It doesn't detect tables specifically — it groups text by its position on the page, turning aligned rows and columns into spreadsheet cells. Actual tables in the PDF convert well; regular paragraphs of text will come out as one long cell per line rather than being split into columns." },
+    { q: "Why did it produce an empty or blank spreadsheet?", a: "If the PDF is a scanned image with no selectable text layer, there's no text to extract — run OCR PDF first to add a text layer, then convert." },
+    { q: "How are multiple pages handled?", a: "Each page of the PDF becomes its own sheet in the output workbook, named 'Page 1', 'Page 2', and so on." },
   ],
   sign: [
     { q: "Is this a legally binding e-signature?", a: "This creates a visual signature image placed on the page — it's not a certified digital signature with identity verification. For contracts that require legal e-signature compliance, use a dedicated e-signature service." },

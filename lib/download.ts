@@ -5,7 +5,7 @@ export function downloadBytes(
   filename: string,
   mime: string
 ) {
-  const blob = new Blob([bytes], { type: mime });
+  const blob = new Blob([bytes as BlobPart], { type: mime });
   saveAs(blob, filename);
 }
 

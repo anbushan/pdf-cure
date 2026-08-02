@@ -37,8 +37,8 @@ export const TOOLS: ToolMeta[] = [
 
   // Optimize
   { slug: "compress", name: "Compress PDF", description: "Shrink file size by re-encoding page images.", category: "Optimize", status: "live", accent: "amber" },
-  { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "soon", accent: "amber", soonReason: "Reliable repair needs a server-side recovery engine." },
-  { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "soon", accent: "amber", soonReason: "High-accuracy OCR needs a server-side model." },
+  { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "live", accent: "amber" },
+  { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "live", accent: "amber" },
 
   // Convert
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn images into a PDF in seconds.", category: "Convert", status: "live", accent: "amber" },
@@ -46,7 +46,7 @@ export const TOOLS: ToolMeta[] = [
   { slug: "word-to-pdf", name: "Word to PDF", description: "Convert .docx files to PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-word", name: "PDF to Word", description: "Export PDF text into an editable .docx.", category: "Convert", status: "live", accent: "amber" },
   { slug: "excel-to-pdf", name: "Excel to PDF", description: "Convert spreadsheets to PDF.", category: "Convert", status: "live", accent: "amber" },
-  { slug: "pdf-to-excel", name: "PDF to Excel", description: "Pull tables out of a PDF into .xlsx.", category: "Convert", status: "soon", accent: "amber", soonReason: "Accurate table detection needs a server-side layout model." },
+  { slug: "pdf-to-excel", name: "PDF to Excel", description: "Pull tables out of a PDF into .xlsx.", category: "Convert", status: "live", accent: "amber" },
   { slug: "powerpoint-to-pdf", name: "PowerPoint to PDF", description: "Extract a .pptx file's text into a PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-powerpoint", name: "PDF to PowerPoint", description: "Turn each PDF page into a slide image.", category: "Convert", status: "live", accent: "amber" },
   { slug: "html-to-pdf", name: "HTML to PDF", description: "Convert an HTML file or snippet to PDF.", category: "Convert", status: "live", accent: "amber" },
