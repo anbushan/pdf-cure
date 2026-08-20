@@ -2,64 +2,49 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-export type Theme = "light" | "dark" | "system";
+export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "foldwork-theme";
 
 interface ThemeContextValue {
   theme: Theme;
-  resolvedTheme: "light" | "dark";
   setTheme: (t: Theme) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "system",
-  resolvedTheme: "light",
+  theme: "light",
   setTheme: () => {},
 });
 
-function getSystemPref(): "light" | "dark" {
+function getSystemPref(): Theme {
   if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function apply(resolved: "light" | "dark") {
-  document.documentElement.classList.toggle("dark", resolved === "dark");
+function apply(theme: Theme) {
+  document.documentElement.classList.toggle("dark", theme === "dark");
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [theme, setThemeState] = useState<Theme>("light");
 
+  // Only used to pick a starting point on a first-ever visit (no stored
+  // choice yet) — after that the user's explicit light/dark pick sticks,
+  // there's no live "system" mode watching OS changes anymore.
   useEffect(() => {
-    const stored = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
-    setThemeState(stored);
-    const resolved = stored === "system" ? getSystemPref() : stored;
-    setResolvedTheme(resolved);
-    apply(resolved);
-
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => {
-      const current = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
-      if (current === "system") {
-        const r = getSystemPref();
-        setResolvedTheme(r);
-        apply(r);
-      }
-    };
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
+    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+    const initial = stored ?? getSystemPref();
+    setThemeState(initial);
+    apply(initial);
   }, []);
 
   function setTheme(t: Theme) {
     setThemeState(t);
     localStorage.setItem(STORAGE_KEY, t);
-    const resolved = t === "system" ? getSystemPref() : t;
-    setResolvedTheme(resolved);
-    apply(resolved);
+    apply(t);
   }
 
-  return <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>{children}</ThemeContext.Provider>;
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

@@ -20,6 +20,40 @@ async function loadDoc(file: File | ArrayBuffer): Promise<PDFDocumentType> {
   return PDFDocument.load(bytes, { ignoreEncryption: true });
 }
 
+/* ---------------------------- Metadata ---------------------------- */
+
+export interface PdfMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  /** Comma-separated, matching how the field is edited in the UI. */
+  keywords: string;
+}
+
+export async function readPdfMetadata(file: File): Promise<PdfMetadata> {
+  const doc = await loadDoc(file);
+  return {
+    title: doc.getTitle() ?? "",
+    author: doc.getAuthor() ?? "",
+    subject: doc.getSubject() ?? "",
+    keywords: doc.getKeywords() ?? "",
+  };
+}
+
+export async function writePdfMetadata(file: File, meta: PdfMetadata): Promise<Uint8Array> {
+  const doc = await loadDoc(file);
+  doc.setTitle(meta.title);
+  doc.setAuthor(meta.author);
+  doc.setSubject(meta.subject);
+  doc.setKeywords(
+    meta.keywords
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean)
+  );
+  return doc.save();
+}
+
 /* ---------------------------- Merge ---------------------------- */
 
 export async function mergePdfs(files: File[]): Promise<Uint8Array> {
@@ -260,6 +294,50 @@ export async function compressPdf(
   return { bytes, originalSize, newSize: bytes.byteLength };
 }
 
+export interface CompressToSizeResult extends CompressResult {
+  /** false if even the most aggressive step still couldn't fit under the target. */
+  achieved: boolean;
+}
+
+const COMPRESS_TO_SIZE_STEPS = [
+  { scale: 1.5, quality: 0.85 },
+  { scale: 1.3, quality: 0.75 },
+  { scale: 1.1, quality: 0.65 },
+  { scale: 0.95, quality: 0.55 },
+  { scale: 0.8, quality: 0.45 },
+  { scale: 0.65, quality: 0.35 },
+  { scale: 0.5, quality: 0.28 },
+];
+
+/**
+ * Same re-render-and-re-encode technique as compressPdf, but instead of one
+ * of three fixed presets, it steps through progressively more aggressive
+ * scale/quality settings — same list every time, not a real search — until
+ * the result fits under the requested size or the list runs out.
+ */
+export async function compressToTargetSize(file: File, targetBytes: number): Promise<CompressToSizeResult> {
+  const { PDFDocument } = await getPdfLib();
+  const originalSize = file.size;
+  let last: Uint8Array | null = null;
+
+  for (const step of COMPRESS_TO_SIZE_STEPS) {
+    const rendered = await renderPdfPages(file, step.scale, undefined, step.quality);
+    const out = await PDFDocument.create();
+    for (const page of rendered) {
+      const jpgBytes = dataUrlToBytes(page.dataUrl);
+      const img = await out.embedJpg(jpgBytes);
+      const pdfPage = out.addPage([page.width, page.height]);
+      pdfPage.drawImage(img, { x: 0, y: 0, width: page.width, height: page.height });
+    }
+    last = await out.save();
+    if (last.byteLength <= targetBytes) {
+      return { bytes: last, originalSize, newSize: last.byteLength, achieved: true };
+    }
+  }
+
+  return { bytes: last!, originalSize, newSize: last!.byteLength, achieved: false };
+}
+
 /* ---------------------------- Images to PDF ---------------------------- */
 
 export interface ImagePageOptions {
@@ -328,6 +406,416 @@ export async function placeSignature(
   const x = (placement.xPercent / 100) * pw;
   const y = ph - (placement.yPercent / 100) * ph - h;
   page.drawImage(img, { x, y, width: w, height: h });
+  return doc.save();
+}
+
+/* ---------------------------- Add text ---------------------------- */
+
+export interface TextPlacement {
+  pageIndex: number;
+  xPercent: number; // 0-100 from left
+  yPercent: number; // 0-100 from top, to the top of the first line
+  fontSize: number; // pt
+  color: [number, number, number]; // 0-1 rgb
+  bold?: boolean;
+}
+
+/** Types free-form text (including multiple lines) directly onto a page — for filling in a blank on a scanned form, a note, a caption, etc. */
+export async function placeTextOnPdf(file: File, text: string, placement: TextPlacement): Promise<Uint8Array> {
+  const { rgb, StandardFonts } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const font = await doc.embedFont(placement.bold ? StandardFonts.HelveticaBold : StandardFonts.Helvetica);
+  const page = doc.getPages()[placement.pageIndex];
+  const { width: pw, height: ph } = page.getSize();
+  const x = (placement.xPercent / 100) * pw;
+  const topY = ph - (placement.yPercent / 100) * ph;
+  const lineHeight = placement.fontSize * 1.25;
+
+  text.split("\n").forEach((line, i) => {
+    page.drawText(line, {
+      x,
+      y: topY - placement.fontSize - i * lineHeight,
+      size: placement.fontSize,
+      font,
+      color: rgb(...placement.color),
+    });
+  });
+
+  return doc.save();
+}
+
+/* ---------------------------- Image overlay ---------------------------- */
+
+export interface ImagePlacement extends SignaturePlacement {
+  /** Degrees clockwise, as shown on screen (0/90/180/270). Rotates around the image's own center. */
+  rotationDeg?: number;
+}
+
+/**
+ * pdf-lib's `rotate` pivots an image around its bottom-left corner, in a
+ * counter-clockwise, y-up space. This works out where to put that corner
+ * so the image instead rotates around its own center, clockwise, matching
+ * a CSS `transform: rotate()` preview — shared by placeImageOnPdf (single
+ * placement) and addImageWatermark (same placement, once per page).
+ */
+function rotatedImageOrigin(cx: number, cy: number, w: number, h: number, rotationDeg: number) {
+  const theta = (-rotationDeg * Math.PI) / 180;
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
+  return {
+    x: cx - ((w / 2) * cos - (h / 2) * sin),
+    y: cy - ((w / 2) * sin + (h / 2) * cos),
+  };
+}
+
+export async function placeImageOnPdf(
+  file: File,
+  imageDataUrl: string,
+  placement: ImagePlacement
+): Promise<Uint8Array> {
+  const { degrees } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const bytes = dataUrlToBytes(imageDataUrl);
+  const isPng = imageDataUrl.startsWith("data:image/png");
+  const img = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+  const page = doc.getPages()[placement.pageIndex];
+  const { width: pw, height: ph } = page.getSize();
+  const w = (placement.widthPercent / 100) * pw;
+  const h = w * (img.height / img.width);
+  const boxX = (placement.xPercent / 100) * pw;
+  const boxY = ph - (placement.yPercent / 100) * ph - h;
+  const rotation = placement.rotationDeg ?? 0;
+  const { x, y } = rotatedImageOrigin(boxX + w / 2, boxY + h / 2, w, h, rotation);
+
+  page.drawImage(img, { x, y, width: w, height: h, rotate: degrees(-rotation) });
+  return doc.save();
+}
+
+/* ---------------------------- Image watermark ---------------------------- */
+
+export interface ImageWatermarkOptions {
+  opacity: number; // 0-1
+  widthPercent: number; // 0-100 of page width
+  rotationDeg: number; // degrees clockwise, as shown on screen
+}
+
+/** Same idea as addWatermark, but stamps an uploaded image — centered once per page — instead of text. */
+export async function addImageWatermark(
+  file: File,
+  imageDataUrl: string,
+  opts: ImageWatermarkOptions
+): Promise<Uint8Array> {
+  const { degrees } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const bytes = dataUrlToBytes(imageDataUrl);
+  const isPng = imageDataUrl.startsWith("data:image/png");
+  const img = isPng ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+
+  doc.getPages().forEach((page) => {
+    const { width: pw, height: ph } = page.getSize();
+    const w = (opts.widthPercent / 100) * pw;
+    const h = w * (img.height / img.width);
+    const { x, y } = rotatedImageOrigin(pw / 2, ph / 2, w, h, opts.rotationDeg);
+    page.drawImage(img, { x, y, width: w, height: h, opacity: opts.opacity, rotate: degrees(-opts.rotationDeg) });
+  });
+
+  return doc.save();
+}
+
+/* ---------------------------- Fill form ---------------------------- */
+
+export type FormFieldKind = "text" | "checkbox" | "dropdown" | "optionList" | "radio";
+
+export interface FormFieldWidget {
+  fieldName: string;
+  kind: FormFieldKind;
+  pageIndex: number;
+  /** PDF page space: bottom-left origin, y-up, in points. */
+  rect: { x: number; y: number; width: number; height: number };
+  multiline?: boolean;
+  options?: string[];
+  /** Radio only — which option this specific widget (there's one per option) represents. */
+  radioValue?: string;
+}
+
+export interface FormInfo {
+  pageSizes: { width: number; height: number }[];
+  widgets: FormFieldWidget[];
+  values: Record<string, string | boolean>;
+}
+
+/** Reads every fillable field's current value, type, and on-page position, for building an overlay editor. */
+export async function readPdfFormFields(file: File): Promise<FormInfo> {
+  const { PDFTextField, PDFCheckBox, PDFDropdown, PDFOptionList, PDFRadioGroup } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const form = doc.getForm();
+  const pages = doc.getPages();
+  const pageSizes = pages.map((p) => p.getSize());
+  const pageRefTags = pages.map((p) => p.ref.tag);
+
+  const widgets: FormFieldWidget[] = [];
+  const values: Record<string, string | boolean> = {};
+
+  for (const field of form.getFields()) {
+    const name = field.getName();
+    let kind: FormFieldKind;
+    let options: string[] | undefined;
+
+    if (field instanceof PDFTextField) {
+      kind = "text";
+      values[name] = field.getText() ?? "";
+    } else if (field instanceof PDFCheckBox) {
+      kind = "checkbox";
+      values[name] = field.isChecked();
+    } else if (field instanceof PDFDropdown) {
+      kind = "dropdown";
+      options = field.getOptions();
+      values[name] = field.getSelected()[0] ?? "";
+    } else if (field instanceof PDFOptionList) {
+      kind = "optionList";
+      options = field.getOptions();
+      values[name] = field.getSelected()[0] ?? "";
+    } else if (field instanceof PDFRadioGroup) {
+      kind = "radio";
+      options = field.getOptions();
+      values[name] = field.getSelected() ?? "";
+    } else {
+      continue; // buttons, signatures, and anything else that isn't fillable text/choice data
+    }
+
+    for (const widget of field.acroField.getWidgets()) {
+      // Widgets record which page they're on via /P — fall back to page 0
+      // for the rare malformed PDF that omits it.
+      const pageRef = widget.P();
+      const pageIndex = pageRef ? Math.max(0, pageRefTags.indexOf(pageRef.tag)) : 0;
+      const entry: FormFieldWidget = { fieldName: name, kind, pageIndex, rect: widget.getRectangle() };
+      if (kind === "text") entry.multiline = field instanceof PDFTextField && field.isMultiline();
+      if (options) entry.options = options;
+      if (kind === "radio") entry.radioValue = widget.getOnValue()?.decodeText();
+      widgets.push(entry);
+    }
+  }
+
+  return { pageSizes, widgets, values };
+}
+
+/** Writes the given values back into the form's fields (looked up by fully-qualified name) and saves. */
+export async function fillPdfForm(
+  file: File,
+  values: Record<string, string | boolean>,
+  opts: { flatten?: boolean } = {}
+): Promise<Uint8Array> {
+  const { PDFTextField, PDFCheckBox, PDFDropdown, PDFOptionList, PDFRadioGroup } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const form = doc.getForm();
+
+  for (const [name, value] of Object.entries(values)) {
+    try {
+      const field = form.getField(name);
+      if (field instanceof PDFTextField) {
+        field.setText(typeof value === "string" && value.length > 0 ? value : undefined);
+      } else if (field instanceof PDFCheckBox) {
+        if (value) field.check();
+        else field.uncheck();
+      } else if ((field instanceof PDFDropdown || field instanceof PDFOptionList || field instanceof PDFRadioGroup) && value) {
+        field.select(String(value));
+      }
+    } catch {
+      // Best-effort — skip a field that fails to set rather than aborting the whole fill.
+    }
+  }
+
+  // Flattening bakes the values into the page content and removes the
+  // fields, so the result can no longer be edited — useful for a final,
+  // submission-ready copy (e.g. a signed loan form).
+  if (opts.flatten) form.flatten();
+
+  return doc.save();
+}
+
+/* ---------------------------- Extract images ---------------------------- */
+
+export interface ExtractedImage {
+  pageIndex: number;
+  bytes: Uint8Array; // PNG
+}
+
+type Matrix = [number, number, number, number, number, number];
+const IDENTITY_MATRIX: Matrix = [1, 0, 0, 1, 0, 0];
+
+// Standard PDF matrix concatenation: applies `m1` first, then `m2`.
+function matMul(m1: Matrix, m2: Matrix): Matrix {
+  return [
+    m1[0] * m2[0] + m1[1] * m2[2],
+    m1[0] * m2[1] + m1[1] * m2[3],
+    m1[2] * m2[0] + m1[3] * m2[2],
+    m1[2] * m2[1] + m1[3] * m2[3],
+    m1[4] * m2[0] + m1[5] * m2[2] + m2[4],
+    m1[4] * m2[1] + m1[5] * m2[3] + m2[5],
+  ];
+}
+
+function matApply(m: Matrix, x: number, y: number): [number, number] {
+  return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+}
+
+/**
+ * Pulls each embedded photo/logo back out of a PDF at real resolution,
+ * rather than rasterizing whole pages like PDF to JPG does. pdf.js's
+ * operator list records the raw content-stream ops (q/Q/cm/Do) but not an
+ * image's actual placement, so we replay the save/restore/transform matrix
+ * stack ourselves to find where each `Do` (paintImageXObject) call landed
+ * on the page, then crop that rectangle out of a full-page render — which
+ * sidesteps having to decode every possible PDF image color space by hand.
+ * Tiled image patterns (paintImageXObjectRepeat) are skipped; those are
+ * almost always background fills, not "a picture" someone wants to save.
+ */
+export async function extractImagesFromPdf(file: File, scale = 2): Promise<ExtractedImage[]> {
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  const OPS = pdfjsLib.OPS;
+  const results: ExtractedImage[] = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const opList = await page.getOperatorList();
+
+    let ctm: Matrix = IDENTITY_MATRIX;
+    const stack: Matrix[] = [];
+    const boxes: { x0: number; y0: number; x1: number; y1: number }[] = [];
+
+    for (let i = 0; i < opList.fnArray.length; i++) {
+      const fn = opList.fnArray[i];
+      if (fn === OPS.save) {
+        stack.push(ctm);
+      } else if (fn === OPS.restore) {
+        ctm = stack.pop() ?? IDENTITY_MATRIX;
+      } else if (fn === OPS.transform) {
+        ctm = matMul(opList.argsArray[i] as Matrix, ctm);
+      } else if (fn === OPS.paintImageXObject || fn === OPS.paintInlineImageXObject) {
+        // Both a named image XObject and an inline (BI/ID/EI) image paint into the unit square, transformed by the CTM.
+        const corners = [matApply(ctm, 0, 0), matApply(ctm, 1, 0), matApply(ctm, 1, 1), matApply(ctm, 0, 1)];
+        const xs = corners.map((c) => c[0]);
+        const ys = corners.map((c) => c[1]);
+        boxes.push({ x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) });
+      }
+    }
+
+    if (boxes.length === 0) continue;
+
+    const viewport = page.getViewport({ scale });
+    const pageCanvas = document.createElement("canvas");
+    pageCanvas.width = Math.max(1, Math.ceil(viewport.width));
+    pageCanvas.height = Math.max(1, Math.ceil(viewport.height));
+    const pageCtx = pageCanvas.getContext("2d")!;
+    await page.render({ canvasContext: pageCtx, viewport }).promise;
+
+    for (const box of boxes) {
+      const [vx0, vy0] = viewport.convertToViewportPoint(box.x0, box.y0);
+      const [vx1, vy1] = viewport.convertToViewportPoint(box.x1, box.y1);
+      const sx = Math.max(0, Math.floor(Math.min(vx0, vx1)));
+      const sy = Math.max(0, Math.floor(Math.min(vy0, vy1)));
+      const sw = Math.min(pageCanvas.width - sx, Math.ceil(Math.abs(vx1 - vx0)));
+      const sh = Math.min(pageCanvas.height - sy, Math.ceil(Math.abs(vy1 - vy0)));
+      if (sw < 4 || sh < 4) continue; // skip slivers — decorative rules, not real images
+
+      const cropCanvas = document.createElement("canvas");
+      cropCanvas.width = sw;
+      cropCanvas.height = sh;
+      cropCanvas.getContext("2d")!.drawImage(pageCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+      const blob: Blob = await new Promise((resolve, reject) =>
+        cropCanvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn't encode an extracted image."))), "image/png")
+      );
+      results.push({ pageIndex: p - 1, bytes: new Uint8Array(await blob.arrayBuffer()) });
+    }
+  }
+
+  return results;
+}
+
+/* ---------------------------- Highlight & annotate ---------------------------- */
+
+export interface HighlightBox {
+  pageIndex: number;
+  xPercent: number;
+  yPercent: number;
+  wPercent: number;
+  hPercent: number;
+  color: [number, number, number]; // 0-1 rgb
+}
+
+export interface CommentMark {
+  pageIndex: number;
+  xPercent: number;
+  yPercent: number;
+  text: string;
+  color: [number, number, number];
+}
+
+/**
+ * Draws translucent highlight boxes and numbered sticky-note markers
+ * directly onto the page as vector shapes — unlike Redact, nothing is
+ * rasterized, so the underlying text stays intact, selectable, and
+ * searchable underneath a highlight.
+ */
+export async function annotatePdf(file: File, highlights: HighlightBox[], comments: CommentMark[]): Promise<Uint8Array> {
+  const { rgb, StandardFonts } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const boldFont = await doc.embedFont(StandardFonts.HelveticaBold);
+  const pages = doc.getPages();
+
+  for (const h of highlights) {
+    const page = pages[h.pageIndex];
+    if (!page) continue;
+    const { width: pw, height: ph } = page.getSize();
+    const width = (h.wPercent / 100) * pw;
+    const height = (h.hPercent / 100) * ph;
+    const x = (h.xPercent / 100) * pw;
+    const y = ph - (h.yPercent / 100) * ph - height;
+    page.drawRectangle({ x, y, width, height, color: rgb(...h.color), opacity: 0.35 });
+  }
+
+  const maxCharsPerLine = 40;
+  comments.forEach((c, i) => {
+    const page = pages[c.pageIndex];
+    if (!page) return;
+    const { width: pw, height: ph } = page.getSize();
+    const cx = (c.xPercent / 100) * pw;
+    const cy = ph - (c.yPercent / 100) * ph;
+    const radius = 8;
+
+    page.drawCircle({ x: cx, y: cy, size: radius, color: rgb(...c.color), opacity: 0.95 });
+    const num = String(i + 1);
+    page.drawText(num, { x: cx - boldFont.widthOfTextAtSize(num, 9) / 2, y: cy - 3.5, size: 9, font: boldFont, color: rgb(1, 1, 1) });
+
+    const text = c.text.trim();
+    if (!text) return;
+    const lines: string[] = [];
+    for (let rest = text; rest.length > 0; rest = rest.slice(maxCharsPerLine)) lines.push(rest.slice(0, maxCharsPerLine));
+
+    const lineHeight = 10;
+    const boxWidth = 160;
+    const boxHeight = lines.length * lineHeight + 8;
+    const boxX = Math.min(cx + radius + 4, Math.max(0, pw - boxWidth - 4));
+    const boxY = Math.min(Math.max(cy - boxHeight / 2, 0), Math.max(0, ph - boxHeight));
+
+    page.drawRectangle({
+      x: boxX,
+      y: boxY,
+      width: boxWidth,
+      height: boxHeight,
+      color: rgb(1, 0.98, 0.85),
+      borderColor: rgb(...c.color),
+      borderWidth: 1,
+    });
+    lines.forEach((line, li) => {
+      page.drawText(line, { x: boxX + 4, y: boxY + boxHeight - (li + 1) * lineHeight, size: 8, font, color: rgb(0.1, 0.1, 0.1) });
+    });
+  });
+
   return doc.save();
 }
 
@@ -761,6 +1249,131 @@ export async function pdfToExcel(file: File): Promise<Uint8Array> {
     throw new Error("Couldn't find any selectable text in this PDF — scanned pages need OCR first.");
   }
 
+  return new Uint8Array(XLSX.write(workbook, { type: "array", bookType: "xlsx" }));
+}
+
+/* ---------------------------- Bank statement to Excel ---------------------------- */
+
+const STATEMENT_DATE_RE = /\b(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,9},?\s+\d{2,4}|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{2,4})\b/;
+const STATEMENT_AMOUNT_RE = /-?[\d,]+\.\d{2}/g;
+
+interface StatementRow {
+  date: string;
+  description: string;
+  debit: string;
+  credit: string;
+  balance: string;
+}
+
+/**
+ * Reconstructs each printed line of text (grouped by on-page position, the
+ * same line-grouping step pdfToExcel uses) across the whole document, then
+ * applies bank-statement-specific heuristics on top: a line starting with a
+ * date begins a new transaction; a wrapped continuation line with no date
+ * folds into the previous transaction's description; and whether an amount
+ * is a debit or a credit is inferred from whether the running balance went
+ * up or down since the previous row, since statements rarely label that
+ * unambiguously once reduced to plain extracted text. This is a best-effort
+ * heuristic tuned for the common passbook-style layout (date, description,
+ * one or two amount columns, running balance) — unusual layouts may need
+ * manual correction after export.
+ */
+export async function bankStatementToExcel(file: File): Promise<Uint8Array> {
+  const XLSX = await import("xlsx");
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+  const lines: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const items = (textContent.items as any[])
+      .filter((it) => typeof it.str === "string" && it.str.trim() !== "")
+      .map((it) => ({ text: it.str as string, x: it.transform[4] as number, y: it.transform[5] as number }));
+    if (items.length === 0) continue;
+
+    items.sort((a, b) => b.y - a.y || a.x - b.x);
+    const lineTolerance = 4;
+    const grouped: (typeof items)[] = [];
+    for (const it of items) {
+      const last = grouped[grouped.length - 1];
+      if (last && Math.abs(last[0].y - it.y) <= lineTolerance) last.push(it);
+      else grouped.push([it]);
+    }
+    for (const line of grouped) {
+      line.sort((a, b) => a.x - b.x);
+      lines.push(
+        line
+          .map((it) => it.text)
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .trim()
+      );
+    }
+  }
+
+  const rows: StatementRow[] = [];
+  let previousBalance: number | null = null;
+
+  for (const line of lines) {
+    const dateMatch = line.match(STATEMENT_DATE_RE);
+    const isTransactionStart = !!dateMatch && dateMatch.index! < 15;
+
+    if (!isTransactionStart) {
+      // A wrapped description continues onto the next printed line with no
+      // date of its own — fold it into the transaction already in progress.
+      if (rows.length > 0 && line.length > 0 && !/^page \d+/i.test(line)) {
+        rows[rows.length - 1].description = `${rows[rows.length - 1].description} ${line}`.trim();
+      }
+      continue;
+    }
+
+    const amounts = [...line.matchAll(STATEMENT_AMOUNT_RE)].map((m) => ({
+      text: m[0],
+      value: parseFloat(m[0].replace(/,/g, "")),
+      index: m.index ?? 0,
+    }));
+    const date = dateMatch![0];
+    const firstAmountIndex = amounts.length > 0 ? amounts[0].index : line.length;
+    const description = line.slice(dateMatch!.index! + date.length, firstAmountIndex).trim();
+
+    let debit = "";
+    let credit = "";
+    let balance = "";
+
+    if (amounts.length >= 2) {
+      // The last number on the line is almost always the running balance;
+      // the one before it is this transaction's amount.
+      const balanceAmt = amounts[amounts.length - 1];
+      const txnAmt = amounts[amounts.length - 2];
+      balance = balanceAmt.text;
+      if (previousBalance !== null && balanceAmt.value - previousBalance < 0) {
+        debit = txnAmt.text;
+      } else {
+        credit = txnAmt.text;
+      }
+      previousBalance = balanceAmt.value;
+    } else if (amounts.length === 1) {
+      balance = amounts[0].text;
+      previousBalance = amounts[0].value;
+    }
+
+    rows.push({ date, description, debit, credit, balance });
+  }
+
+  if (rows.length === 0) {
+    throw new Error("Couldn't find any transaction rows that start with a date — make sure this is a text-based statement (a scanned one needs OCR PDF first).");
+  }
+
+  const sheetRows: (string | number)[][] = [
+    ["Date", "Description", "Debit", "Credit", "Balance"],
+    ...rows.map((r) => [r.date, r.description, r.debit, r.credit, r.balance]),
+  ];
+  const sheet = XLSX.utils.aoa_to_sheet(sheetRows);
+  sheet["!cols"] = [{ wch: 12 }, { wch: 45 }, { wch: 14 }, { wch: 14 }, { wch: 14 }];
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, sheet, "Transactions");
   return new Uint8Array(XLSX.write(workbook, { type: "array", bookType: "xlsx" }));
 }
 

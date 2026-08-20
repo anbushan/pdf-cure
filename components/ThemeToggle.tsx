@@ -1,11 +1,11 @@
 "use client";
 
-import { Sun, Moon, Monitor } from "lucide-react";
+import { Sun, Moon } from "lucide-react";
 import { useTheme, Theme } from "./ThemeProvider";
 
-const ORDER: Theme[] = ["light", "dark", "system"];
-const ICONS = { light: Sun, dark: Moon, system: Monitor };
-const LABELS = { light: "Light", dark: "Dark", system: "System" };
+const ORDER: Theme[] = ["light", "dark"];
+const ICONS = { light: Sun, dark: Moon };
+const LABELS = { light: "Light", dark: "Dark" };
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();

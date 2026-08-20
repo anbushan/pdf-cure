@@ -79,6 +79,7 @@ async function ensureSeeded(): Promise<void> {
         ]),
         cta: "checkout",
         order: 1,
+        active: false,
       },
     ],
   });

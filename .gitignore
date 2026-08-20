@@ -10,3 +10,10 @@ out
 /lib/generated/prisma
 /prisma/dev.db
 /prisma/dev.db-journal
+tsconfig.tsbuildinfo
+sw.js
+public/workbox-f52fd911.js
+tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
+.vercel
+.env*

@@ -36,10 +36,9 @@ export default function SignInSection() {
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-light text-amber-dark">
               <Gauge size={22} />
             </span>
-            <h3 className="font-display text-base font-semibold text-ink">Manage your plan</h3>
+            <h3 className="font-display text-base font-semibold text-ink">Free for everyone</h3>
             <p className="text-sm text-ink-faint leading-relaxed">
-              See your current plan, upgrade to Pro for a much higher daily AI limit per tool and no ads, or cancel
-              anytime.
+              There's no paid plan right now — every tool, including the AI ones once they're back, is free to use.
             </p>
           </div>
 

@@ -21,13 +21,13 @@ export interface ToolMeta {
 
 export const TOOLS: ToolMeta[] = [
   // AI
-  { slug: "summarize", name: "Summarize PDF", description: "Get a concise summary of a long document.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ask", name: "Ask your PDF", description: "Chat with a document and get sourced answers.", category: "AI", status: "live", accent: "violet" },
-  { slug: "translate", name: "Translate PDF", description: "Translate a PDF's text into another language.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ai-html-to-pdf", name: "AI HTML to PDF", description: "Clean up messy HTML and convert it to a polished PDF.", category: "AI", status: "live", accent: "violet" },
-  { slug: "ai-pdf-to-html", name: "AI PDF to HTML", description: "Turn a PDF into clean, structured HTML you can publish.", category: "AI", status: "live", accent: "violet" },
-  { slug: "detect-plagiarism", name: "Detect Plagiarism", description: "AI writing analysis that flags passages that look unoriginal or copy-pasted.", category: "AI", status: "live", accent: "violet" },
-  { slug: "remove-background", name: "Image Background Remover", description: "Erase a photo's background in your browser — no upload, no account.", category: "AI", status: "live", accent: "violet" },
+  { slug: "summarize", name: "Summarize PDF", description: "Get a concise summary of a long document.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "ask", name: "Ask your PDF", description: "Chat with a document and get sourced answers.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "translate", name: "Translate PDF", description: "Translate a PDF's text into another language.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "ai-html-to-pdf", name: "AI HTML to PDF", description: "Clean up messy HTML and convert it to a polished PDF.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "ai-pdf-to-html", name: "AI PDF to HTML", description: "Turn a PDF into clean, structured HTML you can publish.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "detect-plagiarism", name: "Detect Plagiarism", description: "AI writing analysis that flags passages that look unoriginal or copy-pasted.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
+  { slug: "remove-background", name: "Image Background Remover", description: "Erase a photo's background in your browser — no upload, no account.", category: "AI", status: "soon", accent: "violet", soonReason: "AI tools are coming soon" },
 
   // Organize
   { slug: "merge", name: "Merge PDF", description: "Combine PDFs in the order you want.", category: "Organize", status: "live", accent: "teal" },
@@ -36,9 +36,12 @@ export const TOOLS: ToolMeta[] = [
   { slug: "extract-pages", name: "Extract pages", description: "Pull selected pages into a new PDF.", category: "Organize", status: "live", accent: "teal" },
   { slug: "organize", name: "Organize PDF", description: "Reorder, rotate, or delete pages visually.", category: "Organize", status: "live", accent: "teal" },
   { slug: "compare", name: "Compare PDFs", description: "See exactly what changed between two versions.", category: "Organize", status: "live", accent: "teal" },
+  { slug: "extract-images", name: "Extract Images from PDF", description: "Pull the embedded photos and logos out of a PDF as a zip of image files.", category: "Organize", status: "live", accent: "teal" },
+  { slug: "batch", name: "Batch Process PDFs", description: "Compress, watermark, protect, or unlock many PDFs at once, delivered together in a zip.", category: "Organize", status: "live", accent: "teal" },
 
   // Optimize
   { slug: "compress", name: "Compress PDF", description: "Shrink file size by re-encoding page images.", category: "Optimize", status: "live", accent: "amber" },
+  { slug: "compress-to-size", name: "Compress to Target Size", description: "Shrink a PDF down until it fits under a size you choose — for email or upload limits.", category: "Optimize", status: "live", accent: "amber" },
   { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "live", accent: "amber" },
   { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "live", accent: "amber" },
 
@@ -55,12 +58,21 @@ export const TOOLS: ToolMeta[] = [
   { slug: "powerpoint-to-pdf", name: "PowerPoint to PDF", description: "Extract a .pptx file's text into a PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-powerpoint", name: "PDF to PowerPoint", description: "Turn each PDF page into a slide image.", category: "Convert", status: "live", accent: "amber" },
   { slug: "html-to-pdf", name: "HTML to PDF", description: "Convert an HTML file or snippet to PDF.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "bank-statement-to-excel", name: "Bank Statement to Excel", description: "Turn a bank statement PDF into a clean spreadsheet with date, description, debit, credit, and balance columns.", category: "Convert", status: "live", accent: "amber" },
 
   // Edit
   { slug: "watermark", name: "Watermark", description: "Stamp text over every page.", category: "Edit", status: "live", accent: "rust" },
   { slug: "page-numbers", name: "Page numbers", description: "Add page numbers with your choice of position.", category: "Edit", status: "live", accent: "rust" },
   { slug: "rotate", name: "Rotate PDF", description: "Rotate one page or the whole document.", category: "Edit", status: "live", accent: "rust" },
   { slug: "crop", name: "Crop PDF", description: "Trim margins from every page.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "add-image", name: "Add Image to PDF", description: "Place a photo or logo onto a page — drag it into position, resize it, and it's fit to the page automatically.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "image-watermark", name: "Image Watermark", description: "Stamp a logo or image across every page, with adjustable opacity and size.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "add-qrcode", name: "Add QR Code to PDF", description: "Generate a QR code from a link or text and place it on a page.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "add-text", name: "Add Text to PDF", description: "Type free-form text directly onto a page — for filling in a blank on a scanned form or adding a note.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "fill-form", name: "Fill PDF Form", description: "Fill out a fillable PDF's own form fields — text, checkboxes, and dropdowns — and download it.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "highlight-pdf", name: "Highlight & Annotate PDF", description: "Highlight text and add sticky-note comments directly on a page.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "id-photo", name: "ID Photo Maker", description: "Crop and resize a photo to a standard passport or ID size with a solid background.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "edit-metadata", name: "Edit PDF Metadata", description: "Set a PDF's title, author, subject, and keywords.", category: "Edit", status: "live", accent: "rust" },
 
   // Security
   { slug: "sign", name: "Sign PDF", description: "Draw or type a signature and place it on the page.", category: "Security", status: "live", accent: "rust" },
@@ -69,7 +81,7 @@ export const TOOLS: ToolMeta[] = [
   { slug: "unlock", name: "Unlock PDF", description: "Remove a known password from a PDF.", category: "Security", status: "live", accent: "rust" },
 ];
 
-export const CATEGORIES: ToolCategory[] = ["AI", "Organize", "Optimize", "Convert", "Edit", "Security"];
+export const CATEGORIES: ToolCategory[] = ["Organize", "Optimize", "Convert", "Edit", "Security", "AI"];
 
 export const CATEGORY_TKEY: Record<ToolCategory, "catAI" | "catOrganize" | "catOptimize" | "catConvert" | "catEdit" | "catSecurity"> = {
   AI: "catAI",

@@ -110,7 +110,7 @@ export default function RootLayout({
         {/* Runs before paint so there's no flash of the wrong theme on load. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('foldwork-theme')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('foldwork-theme');var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();`,
           }}
         />
       </head>

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Sparkle, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ToastProvider";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import FreeBadge from "@/components/FreeBadge";
 
 export default function AccountSettingsPage() {
   const { data: session, update } = useSession();
@@ -61,11 +61,7 @@ export default function AccountSettingsPage() {
             <Sparkle size={14} className={isPro ? "text-amber-dark" : "text-ink-faint"} />
             {isPro ? "Pro plan" : "Free plan"}
           </span>
-          {!isPro && (
-            <Link href="/pricing" className="text-sm font-medium text-amber-dark hover:underline">
-              Upgrade to Pro
-            </Link>
-          )}
+          {!isPro && <FreeBadge />}
         </div>
         {isPro && session.user.planExpiresAt && (
           <p className="mt-1 text-xs text-ink-faint">

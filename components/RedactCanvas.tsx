@@ -9,6 +9,8 @@ export interface PctBox {
   yPercent: number;
   wPercent: number;
   hPercent: number;
+  /** Per-box fill override (a CSS color) — omit for the default solid black used by redaction. */
+  color?: string;
 }
 
 interface Props {
@@ -16,9 +18,11 @@ interface Props {
   boxes: PctBox[];
   onAdd: (box: PctBox) => void;
   onRemove: (id: string) => void;
+  /** Color assigned to newly drawn boxes; omit for the default solid black (redaction). */
+  boxColor?: string;
 }
 
-export default function RedactCanvas({ imageSrc, boxes, onAdd, onRemove }: Props) {
+export default function RedactCanvas({ imageSrc, boxes, onAdd, onRemove, boxColor }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
   const dragging = useRef(false);
@@ -52,7 +56,7 @@ export default function RedactCanvas({ imageSrc, boxes, onAdd, onRemove }: Props
     const h = Math.abs(draft.y1 - draft.y0);
     setDraft(null);
     if (w > 1.5 && h > 1.5) {
-      onAdd({ id: crypto.randomUUID(), xPercent: x, yPercent: y, wPercent: w, hPercent: h });
+      onAdd({ id: crypto.randomUUID(), xPercent: x, yPercent: y, wPercent: w, hPercent: h, ...(boxColor ? { color: boxColor } : {}) });
     }
   }
 
@@ -78,8 +82,14 @@ export default function RedactCanvas({ imageSrc, boxes, onAdd, onRemove }: Props
       {boxes.map((b) => (
         <div
           key={b.id}
-          className="absolute bg-ink group"
-          style={{ left: `${b.xPercent}%`, top: `${b.yPercent}%`, width: `${b.wPercent}%`, height: `${b.hPercent}%` }}
+          className={`absolute group ${b.color ? "" : "bg-ink"}`}
+          style={{
+            left: `${b.xPercent}%`,
+            top: `${b.yPercent}%`,
+            width: `${b.wPercent}%`,
+            height: `${b.hPercent}%`,
+            ...(b.color ? { backgroundColor: b.color } : {}),
+          }}
         >
           <button
             onClick={(e) => {

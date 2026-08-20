@@ -6,6 +6,7 @@ import { Check, Sparkles, Loader2 } from "lucide-react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useToast } from "@/components/ToastProvider";
 import { formatCurrency } from "@/lib/currency";
+import FreeBadge from "@/components/FreeBadge";
 
 declare global {
   interface Window {
@@ -142,7 +143,7 @@ export default function PricingPage({ config, currency, plans }: PricingClientPr
       <div className="mx-auto max-w-5xl px-6 pt-6 text-center">
         <h1 className="font-display text-4xl font-bold tracking-tight text-ink">Simple pricing</h1>
         <p className="mt-3 text-lg text-ink-faint">
-          Every editing tool is free forever, no account needed. Pro is only about the AI tools and removing ads.
+          Every tool is free forever, no account needed.
         </p>
 
         <div className="mt-10 grid grid-cols-1 gap-6 text-left sm:grid-cols-2 lg:grid-cols-3">
@@ -159,7 +160,10 @@ export default function PricingPage({ config, currency, plans }: PricingClientPr
                 {isCheckout ? (
                   <span className="eyebrow text-amber-dark">{plan.name}</span>
                 ) : (
-                  <h2 className="font-display text-xl font-semibold text-ink">{plan.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="font-display text-xl font-semibold text-ink">{plan.name}</h2>
+                    {plan.priceInr === 0 && <FreeBadge />}
+                  </div>
                 )}
                 <p className={isCheckout ? "mt-2 text-3xl font-bold text-ink" : "mt-1 text-3xl font-bold text-ink"}>
                   {displayPriceInr === 0 ? "₹0" : formatCurrency(displayPriceInr, currency)}

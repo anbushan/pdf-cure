@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { LogOut, Sparkle, UserCircle } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
+import FreeBadge from "./FreeBadge";
 
 function GoogleMark() {
   return (
@@ -95,11 +96,7 @@ export default function AuthButton() {
                 <Sparkle size={14} className={isPro ? "text-amber-dark" : "text-ink-faint"} />
                 {isPro ? "Pro plan" : "Free plan"}
               </span>
-              {!isPro && (
-                <Link href="/pricing" onClick={() => setOpen(false)} className="text-xs font-medium text-amber-dark hover:underline">
-                  Upgrade
-                </Link>
-              )}
+              {!isPro && <FreeBadge />}
             </div>
             {isPro && session.user.planExpiresAt && (
               <p className="mt-1 text-xs text-ink-faint">

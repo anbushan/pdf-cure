@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { Sparkle, Download, Bell, Gauge } from "lucide-react";
+import Link from "next/link";
 import { getSession } from "@/lib/getSession";
 import { prisma } from "@/lib/prisma";
 import { getAiUsageSummary } from "@/lib/aiUsage";
+import FreeBadge from "@/components/FreeBadge";
 
 function fmtDate(d: Date) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -36,11 +37,9 @@ export default async function AccountDashboardPage() {
           <p className="mt-3 font-display text-2xl font-bold text-ink">{isPro ? "Pro" : "Free"}</p>
           {isPro && session!.user.planExpiresAt ? (
             <p className="mt-1 text-xs text-ink-faint">Renews {fmtDate(new Date(session!.user.planExpiresAt))}</p>
-          ) : (
-            <Link href="/pricing" className="mt-1 inline-block text-xs font-medium text-amber-dark hover:underline">
-              Upgrade to Pro
-            </Link>
-          )}
+          ) : !isPro ? (
+            <FreeBadge className="mt-1.5" />
+          ) : null}
         </div>
 
         <div className="paper-stack p-4">

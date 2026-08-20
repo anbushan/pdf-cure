@@ -3,11 +3,11 @@ import type { FaqItem } from "@/components/Faq";
 export const SITE_FAQS: FaqItem[] = [
   {
     q: "Is PDFCure actually free?",
-    a: "Yes. Every editing tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) require a free Google sign-in and are limited to one use per day per account.",
+    a: "Yes. Every tool runs in your browser with no account, no watermark, and no page limit we impose. The AI tools (Summarize, Ask your PDF, Translate) are temporarily disabled for now.",
   },
   {
     q: "Do you upload my files to a server?",
-    a: "For every tool except Summarize, Ask your PDF, and Translate, no — the file never leaves your device. Those three AI tools extract text in your browser and send that text (not the file itself) to a server to generate a response.",
+    a: "No — every tool here processes your files entirely on your device, and nothing is uploaded to a server. The AI tools that used to send extracted text to a server are currently disabled.",
   },
   {
     q: "Is there a file size limit?",
@@ -15,7 +15,7 @@ export const SITE_FAQS: FaqItem[] = [
   },
   {
     q: "Do I need to create an account?",
-    a: "Only for the AI tools, which need a Google sign-in and allow one use per day per account. Every other tool works immediately with no sign-up.",
+    a: "No. Every tool works immediately, with no sign-up.",
   },
   {
     q: "Does this work on mobile?",
@@ -23,7 +23,7 @@ export const SITE_FAQS: FaqItem[] = [
   },
   {
     q: "Can I use this offline?",
-    a: "Yes, once you've installed it (or just visited it once) — the non-AI tools keep working with no internet connection. The AI tools need a live connection and a signed-in Google account.",
+    a: "Yes, once you've installed it (or just visited it once) — every tool keeps working with no internet connection.",
   },
 ];
 
@@ -53,10 +53,25 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "How is the difference percentage calculated?", a: "Each matching page pair is rendered as an image, and we count the percentage of pixels whose color differs beyond a small threshold — small enough to ignore anti-aliasing noise but sensitive to real content changes." },
     { q: "What if the two PDFs have a different number of pages?", a: "Pages that only exist in one document are flagged as 'Only in Document A' or 'Only in Document B' rather than compared against nothing." },
   ],
+  "extract-images": [
+    { q: "How is this different from PDF to JPG?", a: "PDF to JPG rasterizes each whole page as one image. This tool instead pulls out just the individual photos and logos embedded within the page, each as its own file." },
+    { q: "Why didn't it find any images?", a: "The PDF may be text-only, or its visuals may be built from vector shapes and fonts rather than embedded raster images — vector content isn't something this tool extracts." },
+    { q: "What format are the extracted images saved as?", a: "PNG, regardless of how the image was originally encoded inside the PDF, so quality is preserved even for formats browsers can't otherwise handle directly." },
+  ],
   compress: [
     { q: "Why did my file's text become blurry after compressing?", a: "Compression re-renders each page as an image and re-encodes it — it trades sharpness for file size, which is most noticeable on small text at the 'High' setting. Try 'Low' or 'Medium' first." },
     { q: "Will compression remove hyperlinks or form fields?", a: "Yes — because the page is flattened to an image, interactive elements like links and form fields won't survive compression." },
     { q: "Is this the same as a 'PDF size reducer'?", a: "Yes — compressing a PDF and reducing its file size are the same operation. This tool re-encodes the page images at your chosen quality level to shrink the total size." },
+  ],
+  "compress-to-size": [
+    { q: "How is this different from the regular Compress PDF tool?", a: "Compress PDF asks you to pick Low/Medium/High and shows you what you get. This tool instead asks for a target size and automatically steps through progressively stronger compression until the file fits, or reports that it couldn't." },
+    { q: "What happens if it can't reach my target size?", a: "It stops at the smallest setting it has and downloads that, clearly labeled as not having hit the target — usually because the target was very small or the PDF has few images left to compress." },
+    { q: "Why does it take longer than the regular Compress tool?", a: "It may re-render the whole document several times at different settings before finding one that fits, instead of just once." },
+  ],
+  batch: [
+    { q: "Are my files processed one at a time or all together?", a: "One at a time, in order — this keeps memory use manageable for large batches, and means a slow or huge file won't stall the ones after it any more than it would on its own." },
+    { q: "What happens if one file fails?", a: "It's marked as failed with the reason (e.g. a wrong password for Unlock), and the rest of the batch keeps going. Only the successful files are included in the download." },
+    { q: "Can I use a different password for each file when unlocking?", a: "Not in one batch run — the same password is tried against every file. Files locked with a different password will fail and need to be unlocked individually instead." },
   ],
   repair: [
     { q: "What kinds of damage can this actually fix?", a: "It rebuilds the file's internal object table and cross-reference index from scratch, which resolves most 'can't open this file' or 'file is damaged' errors caused by a broken xref table or a corrupted incremental save. It can't fix a file that's simply not a PDF, or recover content that was never saved in the first place." },
@@ -68,8 +83,13 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Does this upload my file anywhere?", a: "No — recognition runs entirely in your browser using a WebAssembly OCR engine. The only network activity is a one-time download of that engine and its language data, the same way this site's PDF viewer fetches its own rendering engine; your document itself never leaves your device." },
   ],
   watermark: [
-    { q: "Can I add an image watermark instead of text?", a: "Not yet — this tool currently supports text watermarks only." },
+    { q: "Can I add an image watermark instead of text?", a: "Yes — use the separate Image Watermark tool for a logo or photo instead of text." },
     { q: "Will the watermark appear on every page?", a: "Yes, it's applied uniformly across the whole document." },
+  ],
+  "image-watermark": [
+    { q: "Can I use a text watermark instead of an image?", a: "Yes — use the separate Watermark tool for stamping text instead." },
+    { q: "Will the image appear on every page?", a: "Yes, it's stamped once, centered, on every page — the same size, opacity, and rotation throughout." },
+    { q: "Can I tile the image across the page instead of a single stamp?", a: "Not currently — each page gets one centered copy. For a repeating pattern, place the image on a wider canvas yourself first." },
   ],
   "page-numbers": [
     { q: "Can I start numbering from something other than 1?", a: "Yes — set 'Start numbering at' to any number, useful if this document continues from another one." },
@@ -114,9 +134,46 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Why did it produce an empty or blank spreadsheet?", a: "If the PDF is a scanned image with no selectable text layer, there's no text to extract — run OCR PDF first to add a text layer, then convert." },
     { q: "How are multiple pages handled?", a: "Each page of the PDF becomes its own sheet in the output workbook, named 'Page 1', 'Page 2', and so on." },
   ],
+  "bank-statement-to-excel": [
+    { q: "How is this different from the regular PDF to Excel tool?", a: "PDF to Excel makes one sheet per page from whatever grid it finds. This tool instead recognizes transaction rows by their date, keeps them in one continuous list across every page, and sorts amounts into Debit/Credit/Balance columns." },
+    { q: "How does it decide if an amount is a debit or a credit?", a: "By comparing the running balance to the previous row's — if the balance went down, that row's amount is a debit; if it went up, it's a credit. Most statements don't label this clearly once reduced to plain text, so this is the most reliable signal available." },
+    { q: "Will it work with any bank's statement format?", a: "It's tuned for the common passbook layout: date, description, one or two amount columns, and a running balance. Unusual formats — multiple accounts on one page, non-standard date formats — may need some manual cleanup after export." },
+    { q: "Why are some rows missing?", a: "Only lines that begin with a recognizable date are treated as transactions. A scanned statement with no selectable text needs OCR PDF first; an oddly formatted date may not be recognized at all." },
+  ],
   sign: [
     { q: "Is this a legally binding e-signature?", a: "This creates a visual signature image placed on the page — it's not a certified digital signature with identity verification. For contracts that require legal e-signature compliance, use a dedicated e-signature service." },
     { q: "Can I save my signature for reuse next time?", a: "Not currently — you'll draw your signature fresh each time you use the tool, and nothing is stored." },
+  ],
+  "add-image": [
+    { q: "What image formats can I upload?", a: "JPG and PNG. PNG is the better choice for a logo or anything with transparency, since it keeps the transparent background instead of filling it in white." },
+    { q: "Will my image get stretched or distorted?", a: "No — resizing only changes the width, and the height follows automatically to keep the image's original aspect ratio." },
+    { q: "Can I add the image to more than one page?", a: "Pick one page per pass. To place it on several pages, run the tool again on the result and choose a different page each time." },
+    { q: "Can I rotate the image or start over with a different one?", a: "Yes — click the image in the preview to bring up rotate and remove controls. Rotate turns it 90° at a time; remove clears it so you can upload a different one." },
+  ],
+  "add-qrcode": [
+    { q: "What can the QR code link to?", a: "Anything encodable as text — a URL, an email address, plain text, or a phone number. It's generated and placed entirely in your browser." },
+    { q: "Will the QR code still scan after resizing or rotating it?", a: "Yes — it's generated at high resolution up front, so shrinking or rotating it on the page doesn't affect whether a scanner can read it. Very small sizes can still be hard for a phone camera to focus on, though." },
+    { q: "Can I edit the QR code after generating it?", a: "Not the content — remove it and generate a new one if the link or text needs to change." },
+  ],
+  "add-text": [
+    { q: "How is this different from Add Image to PDF?", a: "This types real, selectable text using a standard font, rather than placing a picture. Use it for filling in a blank on a form, adding a note, or a caption." },
+    { q: "Can I add more than one block of text?", a: "One block per pass — run the tool again on the result to add another, positioned wherever you like." },
+    { q: "Does it support every language and character set?", a: "It uses a standard Latin font, so it covers English and most European languages well. Characters outside that (e.g. Chinese, Arabic, Devanagari) aren't supported yet." },
+  ],
+  "fill-form": [
+    { q: "Why does it say there are no fillable fields?", a: "Not every PDF that looks like a form actually has real form fields — many are just a scanned image or flat text made to look fillable. Use Add Text to PDF to type onto one of those instead." },
+    { q: "Does this work with checkboxes and dropdowns, not just text?", a: "Yes — text fields, checkboxes, dropdowns, option lists, and radio buttons are all supported, each shown with the right control on the page." },
+    { q: "What does \"lock the form\" do?", a: "It flattens the form: your answers get baked permanently into the page and the fields are removed, so the result can't be edited further — useful for a final, submission-ready copy." },
+  ],
+  "edit-metadata": [
+    { q: "What is PDF metadata used for?", a: "It's the Title, Author, Subject, and Keywords stored inside the file itself — shown in a PDF viewer's document properties panel, used by search engines and file indexers, and sometimes required by submission portals (theses, compliance archives)." },
+    { q: "Will this change how the PDF looks?", a: "No — metadata is invisible information about the file, not part of any page's content. Nothing on the pages themselves changes." },
+    { q: "Can I clear a field instead of just changing it?", a: "Yes — empty a field and save; that removes it rather than leaving the old value." },
+  ],
+  "id-photo": [
+    { q: "Does this remove the background behind the person?", a: "No — it only crops and resizes the photo you upload onto a solid-color canvas, filling any leftover margin. It doesn't detect or remove what's already behind the subject in the original photo." },
+    { q: "Will the exact pixel size meet official passport/visa requirements?", a: "The presets target common published sizes at print resolution, but requirements vary by country and issuer — double-check the exact spec for your application before submitting." },
+    { q: "What's the difference between \"Fill frame\" and \"Fit inside\"?", a: "Fill frame scales the photo up until it covers the whole frame, cropping any excess — the usual choice for a headshot. Fit inside scales it down to show the entire photo, which can leave a background-colored margin on two sides." },
   ],
   protect: [
     { q: "What encryption does this actually use?", a: "AES-256, the current PDF encryption standard — the same class of encryption Adobe Acrobat and other professional tools use, applied entirely in your browser via the Web Crypto API." },
@@ -138,6 +195,11 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   redact: [
     { q: "Is redacted content really removed, or just covered with a black box?", a: "Really removed. The page is rendered as a flattened image with the box burned in, so there's no text layer left underneath to copy or search." },
     { q: "Can I undo a redaction after downloading?", a: "No — once applied and downloaded, the redaction is permanent for that file. Keep your original if you might need it again." },
+  ],
+  "highlight-pdf": [
+    { q: "Is this the same as Redact PDF?", a: "No — Redact permanently destroys what's underneath by flattening the page to an image. Highlighting draws a translucent color over the text, which stays fully intact, selectable, and searchable underneath." },
+    { q: "Are the highlights and comments real, editable PDF annotations?", a: "No — they're drawn directly onto the page as part of its permanent content, the same way the other stamping tools here work. They won't show up in another app's \"comments\" panel, and can't be toggled off later." },
+    { q: "Can I mix multiple colors on one page?", a: "Yes — pick a color before drawing each highlight or dropping each comment; every mark keeps the color it was given." },
   ],
   summarize: [
     { q: "Does this work on scanned PDFs?", a: "Only if the PDF has a selectable text layer. Purely scanned images with no OCR applied won't have any text to summarize." },

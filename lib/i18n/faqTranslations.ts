@@ -2,12 +2,12 @@ import type { FaqItem } from "@/components/Faq";
 
 export const SITE_FAQS_TRANSLATIONS: Record<string, FaqItem[]> = {
   en: [
-    { q: "Is PDFCure actually free?", a: "Yes. Every editing tool runs in your browser with no account, no watermark, and no page limit imposed by us. The AI tools (Summarize, Ask your PDF, Translate) require a free Google sign-in and are limited to one use per day per account." },
-    { q: "Do you upload my files to a server?", a: "For every tool except Summarize, Ask your PDF, and Translate, no — the file never leaves your device. Those three AI tools extract text in your browser and send that text (not the file itself) to a server to generate a response." },
+    { q: "Is PDFCure actually free?", a: "Yes. Every tool runs in your browser with no account, no watermark, and no page limit we impose. The AI tools (Summarize, Ask your PDF, Translate) are temporarily disabled for now." },
+    { q: "Do you upload my files to a server?", a: "No — every tool here processes your files entirely on your device, and nothing is uploaded to a server. The AI tools that used to send extracted text to a server are currently disabled." },
     { q: "Is there a file size limit?", a: "There's no artificial limit we impose, but since processing happens in your browser, very large files (500+ MB or 1,000+ pages) are limited by your device's memory rather than by us." },
-    { q: "Do I need to create an account?", a: "Only for the AI tools (Summarize, Ask your PDF, Translate), which need a Google sign-in and allow one use per day per account. Every other tool works immediately with no sign-up." },
+    { q: "Do I need to create an account?", a: "No. Every tool works immediately, with no sign-up." },
     { q: "Does this work on mobile?", a: "Yes — the site is fully responsive, and it's installable as an app on both iOS and Android via 'Add to Home Screen.'" },
-    { q: "Can I use this offline?", a: "Yes, once you've installed it (or just visited it once) — the non-AI tools keep working with no internet connection. The AI tools need a live connection and a signed-in Google account." },
+    { q: "Can I use this offline?", a: "Yes, once you've installed it (or just visited it once) — every tool keeps working with no internet connection." },
   ],
   es: [
     { q: "¿PDFCure es realmente gratis?", a: "Sí. Todas las herramientas funcionan en tu navegador sin cuenta, sin marca de agua y sin límite de páginas impuesto por nosotros. Las herramientas de IA (Resumir, Pregunta a tu PDF, Traducir) están desactivadas temporalmente." },
