@@ -2,6 +2,12 @@
   "name": "pdfcure",
   "version": "0.1.0",
   "private": true,
+  "browserslist": [
+    "chrome >= 91",
+    "edge >= 91",
+    "firefox >= 90",
+    "safari >= 15"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "prisma migrate deploy && next build",
