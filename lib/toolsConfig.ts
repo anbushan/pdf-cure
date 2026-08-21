@@ -44,6 +44,7 @@ export const TOOLS: ToolMeta[] = [
   { slug: "compress-to-size", name: "Compress to Target Size", description: "Shrink a PDF down until it fits under a size you choose — for email or upload limits.", category: "Optimize", status: "live", accent: "amber" },
   { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "live", accent: "amber" },
   { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "live", accent: "amber" },
+  { slug: "accessibility-checker", name: "Accessibility Checker", description: "Scan a PDF for the concrete things that block screen readers — missing tags, no language, no title, and more.", category: "Optimize", status: "live", accent: "amber" },
 
   // Convert
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn images into a PDF in seconds.", category: "Convert", status: "live", accent: "amber" },

@@ -18,6 +18,7 @@ import Client_batch from "@/app/tools/batch/Client";
 import Client_compress from "@/app/tools/compress/Client";
 import Client_compress_to_size from "@/app/tools/compress-to-size/Client";
 import Client_repair from "@/app/tools/repair/Client";
+import Client_accessibility_checker from "@/app/tools/accessibility-checker/Client";
 import Client_ocr from "@/app/tools/ocr/Client";
 import Client_jpg_to_pdf from "@/app/tools/jpg-to-pdf/Client";
 import Client_heic_to_pdf from "@/app/tools/heic-to-pdf/Client";
@@ -82,6 +83,7 @@ export const TOOL_CLIENTS: Record<string, ComponentType> = {
   "compress": Client_compress,
   "compress-to-size": Client_compress_to_size,
   "repair": Client_repair,
+  "accessibility-checker": Client_accessibility_checker,
   "ocr": Client_ocr,
   "jpg-to-pdf": Client_jpg_to_pdf,
   "heic-to-pdf": Client_heic_to_pdf,

@@ -1934,6 +1934,162 @@ function buildPdfAXmp({ title, producer, createDate }: { title: string; producer
 <?xpacket end="w"?>`;
 }
 
+/* ---------------------------- Accessibility check ---------------------------- */
+
+export interface AccessibilityCheck {
+  id: string;
+  label: string;
+  status: "pass" | "warn" | "fail" | "info";
+  detail: string;
+}
+
+export interface AccessibilityReport {
+  pageCount: number;
+  checks: AccessibilityCheck[];
+}
+
+/**
+ * A best-effort automated scan for the concrete, checkable facts that
+ * decide whether a screen reader can make sense of a document at all —
+ * not a full PDF/UA or WCAG conformance audit. A real audit means
+ * validating an entire tag tree against reading order and semantic
+ * rules (headings nested correctly, tables with proper header
+ * associations, and so on), which needs a human reviewer or a dedicated
+ * remediation tool (PDFix, CommonLook) to do properly. What's checkable
+ * client-side: whether the document is tagged at all, declares a
+ * language, has real extractable text rather than being a bare scan,
+ * has a meaningful title, and roughly how many images would need alt
+ * text — each a real, cited barrier, just not the complete picture.
+ */
+export async function checkAccessibility(file: File): Promise<AccessibilityReport> {
+  const { PDFName, PDFDict, PDFBool, PDFString, PDFHexString } = await getPdfLib();
+  const encrypted = await isPdfEncrypted(file).catch(() => false);
+  const doc = await loadDoc(file);
+  const catalog = doc.catalog;
+  const checks: AccessibilityCheck[] = [];
+
+  if (encrypted) {
+    checks.push({
+      id: "encrypted",
+      label: "Password protection",
+      status: "warn",
+      detail:
+        "This PDF is password-protected. Depending on its permission settings, that can also block assistive technology from reading its content — and it means the checks below may be incomplete, since this scan can't fully inspect an encrypted file's internal structure.",
+    });
+  }
+
+  // Title — present, and not just a bare filename.
+  const title = doc.getTitle()?.trim();
+  const bareFilename = title && /\.(pdf|docx?|xlsx?|pptx?)$/i.test(title);
+  if (!title) {
+    checks.push({
+      id: "title",
+      label: "Document title",
+      status: "fail",
+      detail: "No title is set — screen readers announce the filename instead, which is rarely meaningful on its own. Set one with Edit PDF Metadata.",
+    });
+  } else if (bareFilename || title === file.name) {
+    checks.push({
+      id: "title",
+      label: "Document title",
+      status: "warn",
+      detail: `The title is just the filename ("${title}") rather than a description of the content.`,
+    });
+  } else {
+    checks.push({ id: "title", label: "Document title", status: "pass", detail: `Set to "${title}".` });
+  }
+
+  // Language — needed for a screen reader to pick the right pronunciation/voice.
+  const langObj = catalog.lookupMaybe(PDFName.of("Lang"), PDFString, PDFHexString);
+  const lang = langObj?.decodeText().trim();
+  if (lang) {
+    checks.push({ id: "lang", label: "Document language", status: "pass", detail: `Declared as "${lang}".` });
+  } else {
+    checks.push({
+      id: "lang",
+      label: "Document language",
+      status: "fail",
+      detail: "No document language is declared — a screen reader may default to the wrong pronunciation rules or voice.",
+    });
+  }
+
+  // Tag structure — the single biggest accessibility barrier a PDF can have.
+  const markInfo = catalog.lookupMaybe(PDFName.of("MarkInfo"), PDFDict);
+  const marked = markInfo?.lookupMaybe(PDFName.of("Marked"), PDFBool)?.asBoolean() ?? false;
+  const structTreeRoot = catalog.lookupMaybe(PDFName.of("StructTreeRoot"), PDFDict);
+  const tagged = marked && !!structTreeRoot;
+  if (tagged) {
+    checks.push({
+      id: "tagged",
+      label: "Tagged for screen readers",
+      status: "pass",
+      detail: "This PDF has a tag structure — the foundation a screen reader needs to read it in a sensible order.",
+    });
+  } else {
+    checks.push({
+      id: "tagged",
+      label: "Tagged for screen readers",
+      status: "fail",
+      detail:
+        "This PDF isn't tagged. Without tags, a screen reader has no reliable way to know reading order, headings, or table structure. Properly adding tags needs a dedicated remediation tool — this scan can only detect that they're missing, not add them.",
+    });
+  }
+
+  // Real text vs. a bare scan.
+  const pdfjsLib = await getPdfjs();
+  const jsDoc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pageCount = jsDoc.numPages;
+  let textLength = 0;
+  let imageCount = 0;
+  const OPS = pdfjsLib.OPS;
+  for (let i = 1; i <= pageCount; i++) {
+    const page = await jsDoc.getPage(i);
+    const content = await page.getTextContent();
+    for (const item of content.items as any[]) {
+      if (typeof item.str === "string") textLength += item.str.trim().length;
+    }
+    const opList = await page.getOperatorList();
+    for (const fn of opList.fnArray) {
+      if (fn === OPS.paintImageXObject || fn === OPS.paintInlineImageXObject) imageCount++;
+    }
+  }
+
+  if (textLength < 10) {
+    checks.push({
+      id: "text",
+      label: "Extractable text",
+      status: "fail",
+      detail: "Little or no selectable text was found — this looks like a scanned image with no text layer at all, which a screen reader can't read as text. Run OCR PDF first.",
+    });
+  } else {
+    checks.push({ id: "text", label: "Extractable text", status: "pass", detail: "This document has real, selectable text for a screen reader to read." });
+  }
+
+  // Images and alt text — can only be verified precisely by walking the
+  // tag tree's Figure elements, which is beyond what's practical to
+  // validate client-side, so this stays informational rather than a
+  // pass/fail.
+  if (imageCount === 0) {
+    checks.push({ id: "images", label: "Image alt text", status: "pass", detail: "No images were found that would need alt text." });
+  } else if (!tagged) {
+    checks.push({
+      id: "images",
+      label: "Image alt text",
+      status: "warn",
+      detail: `${imageCount} image${imageCount === 1 ? "" : "s"} found, and this PDF isn't tagged — none of them can carry accessible alt text as a result, so screen reader users get no description of them.`,
+    });
+  } else {
+    checks.push({
+      id: "images",
+      label: "Image alt text",
+      status: "info",
+      detail: `${imageCount} image${imageCount === 1 ? "" : "s"} found. This document is tagged, but confirming each image actually has a meaningful alt-text description needs manual review — this scan can't verify that automatically.`,
+    });
+  }
+
+  return { pageCount, checks };
+}
+
 /* ---------------------------- shared utils ---------------------------- */
 
 function dataUrlToBytes(dataUrl: string): Uint8Array {

@@ -48,6 +48,7 @@ import {
   FileStack,
   Scaling,
   Volume2,
+  Accessibility,
   type LucideIcon,
 } from "lucide-react";
 
@@ -71,6 +72,7 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   "compress-to-size": Target,
   repair: Wrench,
   ocr: ScanText,
+  "accessibility-checker": Accessibility,
   "jpg-to-pdf": ImageIcon,
   "heic-to-pdf": Smartphone,
   "pdf-to-jpg": FileImage,

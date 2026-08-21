@@ -177,6 +177,12 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Will this change how the PDF looks?", a: "No — metadata is invisible information about the file, not part of any page's content. Nothing on the pages themselves changes." },
     { q: "Can I clear a field instead of just changing it?", a: "Yes — empty a field and save; that removes it rather than leaving the old value." },
   ],
+  "accessibility-checker": [
+    { q: "Does this make my PDF accessible, or just check it?", a: "Just check it. Fixing the issues it finds — adding real tags, a reading order, table structure, alt text — needs a dedicated remediation tool or a human reviewer. This scan tells you concretely what's missing; it doesn't add tags itself." },
+    { q: "Is passing every check the same as being WCAG or PDF/UA compliant?", a: "No. A full conformance audit validates an entire tag tree against reading-order and semantic rules — whether headings nest correctly, whether tables have proper header associations, and more. This scan checks the concrete, automatable facts (tagging, language, title, real text, roughly how many images need alt text) that are necessary but not sufficient for full compliance." },
+    { q: "Why does it say it can't verify image alt text?", a: "Confirming a specific image has a meaningful (not just present) alt-text description means walking the tag tree's Figure elements and judging the text itself — that needs human review. This scan can tell you how many images exist and whether the document is tagged at all, which determines whether alt text is even possible." },
+    { q: "My PDF is password-protected — why do the results say they might be incomplete?", a: "This scan can't fully inspect an encrypted file's internal structure, so tag/language/title checks may be less reliable. Remove the password first with Unlock PDF for a fully accurate scan." },
+  ],
   "flatten-pdf": [
     { q: "What does \"flatten\" actually do?", a: "It draws each form field's current value directly onto the page as permanent content, then deletes the underlying fields — so what you see is what's there, and it can no longer be typed into or edited as a form." },
     { q: "Can I undo this afterward?", a: "No — flattening isn't reversible. Keep your original file if you might need to edit the form's values again later." },

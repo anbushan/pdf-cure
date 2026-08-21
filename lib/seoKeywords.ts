@@ -29,6 +29,7 @@ export const TOOL_KEYWORDS: Record<string, string[]> = {
   "extract-images": ["extract images from pdf", "pdf to images", "save pdf images"],
   batch: ["batch pdf processing", "bulk pdf compress", "process multiple pdfs"],
   "compress-to-size": ["compress pdf to target size", "reduce pdf to specific size", "pdf under 1mb"],
+  "accessibility-checker": ["pdf accessibility checker", "pdf 508 compliance", "pdf ada compliance", "pdf/ua checker", "wcag pdf"],
   "jpg-to-pdf": ["jpg to pdf", "image to pdf", "jpeg to pdf", "png to pdf", "photo to pdf", "img to pdf", "jpg to pdf converter"],
   "heic-to-pdf": ["heic to pdf", "heif to pdf", "iphone photos to pdf", "heic to pdf converter"],
   "pdf-to-jpg": ["pdf to jpg", "pdf to image", "pdf to jpg converter", "pdf to png", "pdf to jpeg", "convert pdf to jpg"],
@@ -178,6 +179,10 @@ export const TOOL_SEO_OVERRIDES: Record<string, ToolSeoOverride> = {
   ocr: {
     title: "OCR PDF Free — Make a Scanned PDF Searchable | PDFCure",
     description: "Turn a scanned PDF's pages into searchable, selectable text for free, entirely in your browser. No upload needed.",
+  },
+  "accessibility-checker": {
+    title: "PDF Accessibility Checker Free — WCAG & PDF/UA Scan | PDFCure",
+    description: "Scan a PDF for missing tags, no document language, no title, and untagged images — the concrete things that block screen readers, free and in your browser.",
   },
   "heic-to-pdf": {
     title: "HEIC to PDF Converter Free — iPhone Photos to PDF | PDFCure",
