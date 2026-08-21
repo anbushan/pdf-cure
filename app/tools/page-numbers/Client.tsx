@@ -5,7 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
-import FilePreview from "@/components/FilePreview";
+import { usePdfThumbnails } from "@/lib/usePdfThumbnails";
 import { addPageNumbers, PageNumberPosition } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -21,6 +21,17 @@ const POSITIONS: { id: PageNumberPosition; label: string }[] = [
   { id: "bottom-right", label: "Bottom right" },
 ];
 
+// Mirrors the margin/percent math addPageNumbers uses in points, just
+// expressed as CSS anchoring so the overlay lands in the same spot.
+const POSITION_STYLE: Record<PageNumberPosition, React.CSSProperties> = {
+  "top-left": { top: "3%", left: "5%" },
+  "top-center": { top: "3%", left: "50%", transform: "translateX(-50%)" },
+  "top-right": { top: "3%", right: "5%" },
+  "bottom-left": { bottom: "3%", left: "5%" },
+  "bottom-center": { bottom: "3%", left: "50%", transform: "translateX(-50%)" },
+  "bottom-right": { bottom: "3%", right: "5%" },
+};
+
 export default function PageNumbersPage() {
   const [file, setFile] = useState<File | null>(null);
   const [position, setPosition] = useState<PageNumberPosition>("bottom-center");
@@ -29,6 +40,7 @@ export default function PageNumbersPage() {
   const [error, setError] = useState<string | null>(null);
   useErrorToast(error);
   const [result, setResult] = useState<Uint8Array | null>(null);
+  const { pages, loading } = usePdfThumbnails(file, 0.6);
 
   async function handleApply() {
     if (!file) return;
@@ -62,9 +74,19 @@ export default function PageNumbersPage() {
           />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
+        ) : loading ? (
+          <p className="text-sm text-ink-faint py-10 text-center">Rendering preview…</p>
         ) : (
           <div className="paper-stack p-6 space-y-5">
-            <FilePreview file={file} />
+            <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded border border-paper-line">
+              <img src={pages[0]?.dataUrl} alt="Page preview" className="block w-full rounded" />
+              <div
+                className="absolute rounded bg-amber-light/70 px-1.5 py-0.5 text-xs font-semibold text-ink pointer-events-none"
+                style={POSITION_STYLE[position]}
+              >
+                {startAt}
+              </div>
+            </div>
             <div>
               <p className="text-sm font-medium text-ink mb-2">Position</p>
               <div className="grid grid-cols-3 gap-2">

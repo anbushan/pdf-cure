@@ -5,15 +5,17 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
-import FilePreview from "@/components/FilePreview";
+import { usePdfThumbnails } from "@/lib/usePdfThumbnails";
 import { addWatermark } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
 
 const tool = getTool("watermark")!;
+const PREVIEW_SCALE = 0.6;
 
 export default function WatermarkPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
   const [text, setText] = useState("CONFIDENTIAL");
   const [opacity, setOpacity] = useState(0.25);
   const [fontSize, setFontSize] = useState(48);
@@ -22,6 +24,12 @@ export default function WatermarkPage() {
   const [error, setError] = useState<string | null>(null);
   useErrorToast(error);
   const [result, setResult] = useState<Uint8Array | null>(null);
+  const { pages, loading } = usePdfThumbnails(file, PREVIEW_SCALE);
+
+  // Same watermark is stamped on every page, so the font-size scaling only
+  // needs whichever page is currently previewed.
+  const pageWidthPt = pages[pageIndex] ? pages[pageIndex].width / PREVIEW_SCALE : null;
+  const fontSizeCqw = pageWidthPt ? (fontSize / pageWidthPt) * 100 : 6;
 
   async function handleApply() {
     if (!file) return;
@@ -48,6 +56,7 @@ export default function WatermarkPage() {
     setFile(null);
     setResult(null);
     setError(null);
+    setPageIndex(0);
   }
 
   return (
@@ -62,9 +71,47 @@ export default function WatermarkPage() {
           />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF to watermark" onFiles={(f) => setFile(f[0])} />
+        ) : loading ? (
+          <p className="text-sm text-ink-faint py-10 text-center">Rendering preview…</p>
         ) : (
           <div className="paper-stack p-6 space-y-5">
-            <FilePreview file={file} />
+            {pages.length > 1 && (
+              <div>
+                <label className="text-sm font-medium text-ink">Preview page</label>
+                <select
+                  value={pageIndex}
+                  onChange={(e) => setPageIndex(Number(e.target.value))}
+                  className="mt-1.5 w-full rounded-md border border-paper-line bg-white px-3 py-2 text-sm"
+                >
+                  {pages.map((p) => (
+                    <option key={p.index} value={p.index}>
+                      Page {p.index + 1}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-ink-faint">The watermark is stamped on every page — this just shows how it lands on each one.</p>
+              </div>
+            )}
+
+            <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded border border-paper-line" style={{ containerType: "inline-size" } as React.CSSProperties}>
+              <img src={pages[pageIndex]?.dataUrl} alt="Page preview" className="block w-full rounded" />
+              {text && (
+                <div
+                  className="absolute left-1/2 top-1/2 whitespace-nowrap pointer-events-none"
+                  style={{
+                    transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
+                    fontSize: `${fontSizeCqw}cqw`,
+                    opacity,
+                    color: "#1c2129",
+                    fontWeight: 700,
+                    fontFamily: "Helvetica, Arial, sans-serif",
+                  }}
+                >
+                  {text}
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-sm font-medium text-ink">Watermark text</label>
               <input

@@ -1,17 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { saveAs } from "file-saver";
 import { GripVertical, X, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import { compressPdf, addWatermark, protectPdf, unlockPdf } from "@/lib/pdfTools";
+import { renderPdfPages } from "@/lib/pdfRender";
 import { formatBytes, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
 import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("batch")!;
+
+/** A small first-page thumbnail for one file in the batch list — falls
+ * back to the generic file icon while it renders or if the PDF can't be
+ * read, so a broken thumbnail never blocks the batch run. */
+function FileThumb({ file }: { file: File }) {
+  const [thumb, setThumb] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    renderPdfPages(file, 0.2, [0])
+      .then((pages) => { if (!cancelled && pages[0]) setThumb(pages[0].dataUrl); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [file]);
+  if (!thumb) {
+    return (
+      <div className="flex h-10 w-8 shrink-0 items-center justify-center rounded border border-paper-line bg-paper-light">
+        <FileText size={16} className="text-teal-dark" />
+      </div>
+    );
+  }
+  return <img src={thumb} alt="" className="h-10 w-8 shrink-0 rounded border border-paper-line object-cover bg-white" />;
+}
 
 type Operation = "compress" | "watermark" | "protect" | "unlock";
 
@@ -222,7 +245,7 @@ export default function BatchPage() {
                         ) : (
                           <GripVertical size={16} className="shrink-0 text-ink-faint" />
                         )}
-                        <FileText size={15} className="shrink-0 text-ink-faint" />
+                        <FileThumb file={f} />
                         <span className="flex-1 truncate text-sm font-mono">{f.name}</span>
                         {r?.status === "error" ? (
                           <span className="shrink-0 text-xs text-rust-dark">{r.error}</span>

@@ -5,12 +5,35 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import { extractPdfText } from "@/lib/extractText";
-import { Send, RotateCcw, Sparkles } from "lucide-react";
+import { renderPdfPages } from "@/lib/pdfRender";
+import { Send, RotateCcw, Sparkles, FileText } from "lucide-react";
 import { useErrorToast } from "@/components/useErrorToast";
 import AiDisclaimer from "@/components/AiDisclaimer";
 import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("ask")!;
+
+/** A small first-page thumbnail so the chat header shows what was
+ * actually uploaded, not just a filename — falls back to a plain icon
+ * while it renders or if the PDF can't be read. */
+function FileThumb({ file }: { file: File }) {
+  const [thumb, setThumb] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    renderPdfPages(file, 0.2, [0])
+      .then((pages) => { if (!cancelled && pages[0]) setThumb(pages[0].dataUrl); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [file]);
+  if (!thumb) {
+    return (
+      <span className="flex h-8 w-6 shrink-0 items-center justify-center rounded-sm border border-paper-line bg-white text-ink-faint">
+        <FileText size={13} />
+      </span>
+    );
+  }
+  return <img src={thumb} alt="" className="h-8 w-6 shrink-0 rounded-sm border border-paper-line object-cover bg-white" />;
+}
 
 interface Turn {
   role: "user" | "assistant";
@@ -107,8 +130,11 @@ export default function AskPage() {
           </div>
         ) : (
           <div className="paper-stack p-5 flex flex-col" style={{ height: 520 }}>
-            <div className="flex items-center justify-between border-b border-paper-line pb-3">
-              <p className="text-sm font-mono text-ink-faint truncate">{file.name}</p>
+            <div className="flex items-center gap-2 justify-between border-b border-paper-line pb-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <FileThumb file={file} />
+                <p className="truncate text-sm font-mono text-ink-faint">{file.name}</p>
+              </div>
               <button onClick={reset} className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint hover:text-ink shrink-0">
                 <RotateCcw size={12} /> New file
               </button>

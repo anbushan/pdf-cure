@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
+import FilePreview from "@/components/FilePreview";
 import { checkAccessibility, type AccessibilityReport, type AccessibilityCheck } from "@/lib/pdfTools";
 import { useErrorToast } from "@/components/useErrorToast";
 import { useToast } from "@/components/ToastProvider";
@@ -64,22 +65,20 @@ export default function AccessibilityCheckerPage() {
       <div className="mx-auto max-w-2xl px-6 mt-8">
         {report && counts ? (
           <div>
-            <div className="paper-stack p-5 mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-display text-base font-semibold text-ink">
-                  {file?.name} · {report.pageCount} page{report.pageCount === 1 ? "" : "s"}
-                </p>
-                <p className="mt-1 text-xs text-ink-faint">
-                  {counts.fail > 0 ? `${counts.fail} issue${counts.fail === 1 ? "" : "s"} found` : "No blocking issues found"}
-                  {counts.warn > 0 ? ` · ${counts.warn} warning${counts.warn === 1 ? "" : "s"}` : ""}
-                </p>
+            <div className="mb-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                {file && <FilePreview file={file} className="flex-1" />}
+                <button
+                  onClick={reset}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink shrink-0"
+                >
+                  <RotateCcw size={12} /> Scan another file
+                </button>
               </div>
-              <button
-                onClick={reset}
-                className="inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-xs font-medium text-ink-faint hover:text-ink"
-              >
-                <RotateCcw size={12} /> Scan another file
-              </button>
+              <p className="mt-2 text-xs text-ink-faint">
+                {counts.fail > 0 ? `${counts.fail} issue${counts.fail === 1 ? "" : "s"} found` : "No blocking issues found"}
+                {counts.warn > 0 ? ` · ${counts.warn} warning${counts.warn === 1 ? "" : "s"}` : ""}
+              </p>
             </div>
 
             <div className="space-y-3">

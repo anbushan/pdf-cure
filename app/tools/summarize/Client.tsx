@@ -1,18 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import { extractPdfText } from "@/lib/extractText";
+import { renderPdfPages } from "@/lib/pdfRender";
 import { downloadBytes, stripExt } from "@/lib/download";
-import { Copy, Download, RotateCcw, Sparkles, Check } from "lucide-react";
+import { Copy, Download, RotateCcw, Sparkles, Check, FileText } from "lucide-react";
 import AiDisclaimer from "@/components/AiDisclaimer";
 import { useErrorToast } from "@/components/useErrorToast";
 import { useToast } from "@/components/ToastProvider";
 import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("summarize")!;
+
+/** A small first-page thumbnail so the summary header shows what was
+ * actually uploaded, not just a filename. */
+function FileThumb({ file }: { file: File }) {
+  const [thumb, setThumb] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    renderPdfPages(file, 0.2, [0])
+      .then((pages) => { if (!cancelled && pages[0]) setThumb(pages[0].dataUrl); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [file]);
+  if (!thumb) {
+    return (
+      <span className="flex h-8 w-6 shrink-0 items-center justify-center rounded-sm border border-paper-line bg-white text-ink-faint">
+        <FileText size={13} />
+      </span>
+    );
+  }
+  return <img src={thumb} alt="" className="h-8 w-6 shrink-0 rounded-sm border border-paper-line object-cover bg-white" />;
+}
 
 type Stage = "idle" | "reading" | "summarizing" | "done" | "error";
 
@@ -91,7 +113,10 @@ export default function SummarizePage() {
           </div>
         ) : (
           <div className="paper-stack p-6">
-            <p className="text-sm font-mono text-ink-faint mb-3 truncate">{file?.name}</p>
+            <div className="mb-3 flex min-w-0 items-center gap-2">
+              {file && <FileThumb file={file} />}
+              <p className="truncate text-sm font-mono text-ink-faint">{file?.name}</p>
+            </div>
             <div className="whitespace-pre-wrap text-sm leading-relaxed text-ink">{summary}</div>
             <AiDisclaimer />
             {truncated && (

@@ -5,15 +5,17 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
-import FilePreview from "@/components/FilePreview";
+import { usePdfThumbnails } from "@/lib/usePdfThumbnails";
 import { addImageWatermark } from "@/lib/pdfTools";
 import { downloadPdf, stripExt, fileToDataUrl } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
 
 const tool = getTool("image-watermark")!;
+const PREVIEW_SCALE = 0.6;
 
 export default function ImageWatermarkPage() {
   const [file, setFile] = useState<File | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
   const [image, setImage] = useState<string | null>(null);
   const [opacity, setOpacity] = useState(0.25);
   const [widthPercent, setWidthPercent] = useState(40);
@@ -22,6 +24,7 @@ export default function ImageWatermarkPage() {
   const [error, setError] = useState<string | null>(null);
   useErrorToast(error);
   const [result, setResult] = useState<Uint8Array | null>(null);
+  const { pages, loading } = usePdfThumbnails(file, PREVIEW_SCALE);
 
   async function handleImage(files: File[]) {
     const picked = files[0];
@@ -56,6 +59,7 @@ export default function ImageWatermarkPage() {
     setImage(null);
     setResult(null);
     setError(null);
+    setPageIndex(0);
   }
 
   return (
@@ -70,14 +74,50 @@ export default function ImageWatermarkPage() {
           />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF to watermark" onFiles={(f) => setFile(f[0])} />
+        ) : loading ? (
+          <p className="text-sm text-ink-faint py-10 text-center">Rendering preview…</p>
         ) : (
           <div className="paper-stack p-6 space-y-5">
-            <FilePreview file={file} />
-
             {!image ? (
-              <Dropzone accept="image/jpeg,image/png" label="Select a logo or image" hint="JPG or PNG" onFiles={handleImage} />
+              <>
+                <img src={pages[0]?.dataUrl} alt="Page preview" className="mx-auto block max-h-72 rounded border border-paper-line" />
+                <Dropzone accept="image/jpeg,image/png" label="Select a logo or image" hint="JPG or PNG" onFiles={handleImage} />
+              </>
             ) : (
               <>
+                {pages.length > 1 && (
+                  <div>
+                    <label className="text-sm font-medium text-ink">Preview page</label>
+                    <select
+                      value={pageIndex}
+                      onChange={(e) => setPageIndex(Number(e.target.value))}
+                      className="mt-1.5 w-full rounded-md border border-paper-line bg-white px-3 py-2 text-sm"
+                    >
+                      {pages.map((p) => (
+                        <option key={p.index} value={p.index}>
+                          Page {p.index + 1}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-ink-faint">The image is stamped on every page — this just shows how it lands on each one.</p>
+                  </div>
+                )}
+
+                <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded border border-paper-line">
+                  <img src={pages[pageIndex]?.dataUrl} alt="Page preview" className="block w-full rounded" />
+                  <img
+                    src={image}
+                    alt="Watermark preview"
+                    className="absolute left-1/2 top-1/2 pointer-events-none"
+                    style={{
+                      width: `${widthPercent}%`,
+                      height: "auto",
+                      opacity,
+                      transform: `translate(-50%, -50%) rotate(${rotation}deg)`,
+                    }}
+                  />
+                </div>
+
                 <div className="flex items-center gap-3">
                   <img src={image} alt="Watermark image" className="h-14 w-14 rounded-md border border-paper-line object-contain bg-white" />
                   <button onClick={() => setImage(null)} className="text-xs font-medium text-rust-dark hover:underline">

@@ -5,6 +5,7 @@ import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
+import FilePreview from "@/components/FilePreview";
 import { readPdfMetadata, writePdfMetadata, PdfMetadata } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
@@ -74,6 +75,7 @@ export default function EditMetadataPage() {
           <p className="text-sm text-ink-faint py-10 text-center">Reading metadata…</p>
         ) : (
           <div className="paper-stack p-6 space-y-4">
+            <FilePreview file={file} />
             <div>
               <label className="text-sm font-medium text-ink">Title</label>
               <input

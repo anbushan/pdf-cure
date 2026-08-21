@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
+import FilePreview from "@/components/FilePreview";
 import AiDisclaimer from "@/components/AiDisclaimer";
 import { extractPdfText } from "@/lib/extractText";
 import { downloadBytes, stripExt } from "@/lib/download";
@@ -111,6 +112,7 @@ export default function AiPdfToHtmlClient() {
           </div>
         ) : (
           <div>
+            {file && <FilePreview file={file} className="mb-4" />}
             <div className="paper-stack overflow-hidden p-0">
               <iframe
                 srcDoc={fullDoc}

@@ -1,17 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import { extractPdfText } from "@/lib/extractText";
-import { FileSearch, RotateCcw, ShieldAlert, ShieldCheck, ShieldQuestion } from "lucide-react";
+import { renderPdfPages } from "@/lib/pdfRender";
+import { FileSearch, RotateCcw, ShieldAlert, ShieldCheck, ShieldQuestion, FileText } from "lucide-react";
 import AiDisclaimer from "@/components/AiDisclaimer";
 import { useErrorToast } from "@/components/useErrorToast";
 import { useToast } from "@/components/ToastProvider";
 import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("detect-plagiarism")!;
+
+/** A small first-page thumbnail so the report header shows what was
+ * actually uploaded, not just a filename. */
+function FileThumb({ file }: { file: File }) {
+  const [thumb, setThumb] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    renderPdfPages(file, 0.2, [0])
+      .then((pages) => { if (!cancelled && pages[0]) setThumb(pages[0].dataUrl); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [file]);
+  if (!thumb) {
+    return (
+      <span className="flex h-8 w-6 shrink-0 items-center justify-center rounded-sm border border-paper-line bg-white text-ink-faint">
+        <FileText size={13} />
+      </span>
+    );
+  }
+  return <img src={thumb} alt="" className="h-8 w-6 shrink-0 rounded-sm border border-paper-line object-cover bg-white" />;
+}
 
 type Stage = "idle" | "reading" | "analyzing" | "done" | "error";
 
@@ -105,8 +127,11 @@ export default function DetectPlagiarismPage() {
           </div>
         ) : report ? (
           <div className="paper-stack p-6">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-mono text-ink-faint truncate">{file?.name}</p>
+            <div className="flex items-center gap-2 justify-between">
+              <div className="flex min-w-0 items-center gap-2">
+                {file && <FileThumb file={file} />}
+                <p className="truncate text-sm font-mono text-ink-faint">{file?.name}</p>
+              </div>
               <button onClick={reset} className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-faint hover:text-ink shrink-0">
                 <RotateCcw size={12} /> New file
               </button>
