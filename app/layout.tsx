@@ -8,6 +8,7 @@ import AdSenseScript from "@/components/AdSenseScript";
 import AuthProvider from "@/components/AuthProvider";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import AnalyticsPageview from "@/components/AnalyticsPageview";
+import ScrollRestoration from "@/components/ScrollRestoration";
 import ErrorTracker from "@/components/ErrorTracker";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -159,6 +160,7 @@ export default function RootLayout({
             <LanguageProvider>
               <ToastProvider>
                 <AnalyticsPageview />
+                <ScrollRestoration />
                 <Header />
                 <main className="flex-1">{children}</main>
                 <Footer />

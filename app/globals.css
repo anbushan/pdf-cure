@@ -82,9 +82,19 @@
   --dropzone-tint: 240 240 242;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/*
+ * Deliberately NOT scroll-behavior: smooth here. It's a well-known
+ * browser gotcha: with it set globally, Chrome *animates* the scroll
+ * jump the browser does when restoring position on back/forward
+ * navigation instead of snapping to it instantly — if that animation
+ * gets interrupted by the page still rendering, the restored position
+ * ends up wrong, which is exactly the "back button doesn't return me to
+ * where I was" bug. Nothing here relies on it either — internal same-
+ * page anchor links (#organize etc.) were already replaced with real
+ * page links, and the one place that wants an animated scroll (the
+ * ScrollToTop button) already passes behavior: "smooth" to its own
+ * window.scrollTo() call, which works regardless of this CSS property.
+ */
 
 body {
   background-color: rgb(var(--color-paper));
