@@ -6,12 +6,19 @@ import ToolHeader from "@/components/ToolHeader";
 import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
 import FilePreview from "@/components/FilePreview";
-import { protectPdf } from "@/lib/pdfTools";
+import { protectPdf, ProtectPermissions } from "@/lib/pdfTools";
 import { downloadPdf, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, ChevronDown } from "lucide-react";
 
 const tool = getTool("protect")!;
+
+const PERMISSION_TOGGLES: { key: "allowPrinting" | "allowCopying" | "allowModifying" | "allowAnnotating"; label: string; hint: string }[] = [
+  { key: "allowPrinting", label: "Allow printing", hint: "Off blocks printing entirely in compliant viewers." },
+  { key: "allowCopying", label: "Allow copying text & images", hint: "Off disables select/copy and text extraction." },
+  { key: "allowModifying", label: "Allow editing", hint: "Off blocks editing content and reordering/adding pages." },
+  { key: "allowAnnotating", label: "Allow comments & form filling", hint: "Off blocks adding annotations and filling form fields." },
+];
 
 function passwordStrength(pw: string): { label: string; className: string } {
   if (pw.length === 0) return { label: "", className: "" };
@@ -25,10 +32,19 @@ export default function ProtectClient() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
+  const [permissions, setPermissions] = useState<Record<"allowPrinting" | "allowCopying" | "allowModifying" | "allowAnnotating", boolean>>({
+    allowPrinting: true,
+    allowCopying: true,
+    allowModifying: true,
+    allowAnnotating: true,
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Uint8Array | null>(null);
   useErrorToast(error);
+
+  const restrictedCount = Object.values(permissions).filter((v) => !v).length;
 
   const strength = passwordStrength(password);
   const mismatch = confirm.length > 0 && password !== confirm;
@@ -46,7 +62,14 @@ export default function ProtectClient() {
     setBusy(true);
     setError(null);
     try {
-      const bytes = await protectPdf(file, password);
+      const bytes = await protectPdf(file, password, {
+        allowPrinting: permissions.allowPrinting,
+        allowHighQualityPrint: permissions.allowPrinting,
+        allowCopying: permissions.allowCopying,
+        allowModifying: permissions.allowModifying,
+        allowAnnotating: permissions.allowAnnotating,
+        allowFillingForms: permissions.allowAnnotating,
+      });
       setResult(bytes);
     } catch (e: any) {
       setError(e?.message ?? "Couldn't protect this PDF.");
@@ -61,6 +84,8 @@ export default function ProtectClient() {
     setConfirm("");
     setResult(null);
     setError(null);
+    setShowPermissions(false);
+    setPermissions({ allowPrinting: true, allowCopying: true, allowModifying: true, allowAnnotating: true });
   }
 
   return (
@@ -70,7 +95,11 @@ export default function ProtectClient() {
         {result ? (
           <ResultPanel previewBytes={result}
             title="Your PDF is protected"
-            detail="Encrypted with AES-256 — anyone opening it will need the password you set."
+            detail={
+              restrictedCount > 0
+                ? `Encrypted with AES-256 and ${restrictedCount} permission${restrictedCount === 1 ? "" : "s"} restricted — anyone opening it will need the password you set.`
+                : "Encrypted with AES-256 — anyone opening it will need the password you set."
+            }
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_protected.pdf`)}
             onReset={reset}
           />
@@ -119,6 +148,40 @@ export default function ProtectClient() {
               }`}
             />
             {mismatch && <p className="mt-1 text-xs text-rust-dark">Passwords don't match yet.</p>}
+
+            <div className="mt-4 rounded-md border border-paper-line">
+              <button
+                type="button"
+                onClick={() => setShowPermissions((s) => !s)}
+                className="flex w-full items-center justify-between px-3.5 py-2.5 text-sm font-medium text-ink"
+              >
+                <span>
+                  Permissions{restrictedCount > 0 ? ` — ${restrictedCount} restricted` : " — all allowed"}
+                </span>
+                <ChevronDown size={15} className={`text-ink-faint transition-transform ${showPermissions ? "rotate-180" : ""}`} />
+              </button>
+              {showPermissions && (
+                <div className="space-y-3 border-t border-paper-line px-3.5 py-3">
+                  {PERMISSION_TOGGLES.map((p) => (
+                    <label key={p.key} className="flex items-start gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={permissions[p.key]}
+                        onChange={(e) => setPermissions((prev) => ({ ...prev, [p.key]: e.target.checked }))}
+                        className="mt-0.5 accent-rust-dark"
+                      />
+                      <span>
+                        <span className="block text-sm text-ink">{p.label}</span>
+                        <span className="block text-xs text-ink-faint">{p.hint}</span>
+                      </span>
+                    </label>
+                  ))}
+                  <p className="text-xs text-ink-faint">
+                    These restrict what compliant PDF viewers offer — they aren't a second password and don't stop someone determined to bypass them.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <p className="mt-3 text-xs text-ink-faint">
               Encryption happens locally in your browser (AES-256) — your password and file never leave your device.

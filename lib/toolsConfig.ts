@@ -38,6 +38,8 @@ export const TOOLS: ToolMeta[] = [
   { slug: "compare", name: "Compare PDFs", description: "See exactly what changed between two versions.", category: "Organize", status: "live", accent: "teal" },
   { slug: "extract-images", name: "Extract Images from PDF", description: "Pull the embedded photos and logos out of a PDF as a zip of image files.", category: "Organize", status: "live", accent: "teal" },
   { slug: "batch", name: "Batch Process PDFs", description: "Compress, watermark, protect, or unlock many PDFs at once, delivered together in a zip.", category: "Organize", status: "live", accent: "teal" },
+  { slug: "n-up", name: "N-up PDF", description: "Print multiple pages onto one sheet — 2, 4, 6, or 9-up layouts to save paper.", category: "Organize", status: "live", accent: "teal" },
+  { slug: "bates-numbering", name: "Bates Numbering", description: "Stamp sequential Bates numbers across one or many files — the numbering standard law firms use.", category: "Organize", status: "live", accent: "teal" },
 
   // Optimize
   { slug: "compress", name: "Compress PDF", description: "Shrink file size by re-encoding page images.", category: "Optimize", status: "live", accent: "green" },
@@ -73,6 +75,8 @@ export const TOOLS: ToolMeta[] = [
   { slug: "add-qrcode", name: "Add QR Code to PDF", description: "Generate a QR code from a link or text and place it on a page.", category: "Edit", status: "live", accent: "orange" },
   { slug: "add-text", name: "Add Text to PDF", description: "Type free-form text directly onto a page — for filling in a blank on a scanned form or adding a note.", category: "Edit", status: "live", accent: "orange" },
   { slug: "fill-form", name: "Fill PDF Form", description: "Fill out a fillable PDF's own form fields — text, checkboxes, and dropdowns — and download it.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "create-form", name: "Create PDF Form", description: "Add real fillable text fields and checkboxes to a flat PDF — build your own template.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "edit-text", name: "Edit PDF Text", description: "Click existing text on the page and change it directly, in place.", category: "Edit", status: "live", accent: "orange" },
   { slug: "highlight-pdf", name: "Highlight & Annotate PDF", description: "Highlight text and add sticky-note comments directly on a page.", category: "Edit", status: "live", accent: "orange" },
   { slug: "id-photo", name: "ID Photo Maker", description: "Crop and resize a photo to a standard passport or ID size with a solid background.", category: "Edit", status: "live", accent: "orange" },
   { slug: "edit-metadata", name: "Edit PDF Metadata", description: "Set a PDF's title, author, subject, and keywords.", category: "Edit", status: "live", accent: "orange" },

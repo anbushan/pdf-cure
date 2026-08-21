@@ -67,6 +67,63 @@ export async function mergePdfs(files: File[]): Promise<Uint8Array> {
   return out.save();
 }
 
+export type NUpLayout = 2 | 4 | 6 | 9;
+
+const NUP_GRID: Record<NUpLayout, [cols: number, rows: number]> = {
+  2: [1, 2],
+  4: [2, 2],
+  6: [2, 3],
+  9: [3, 3],
+};
+
+// US Letter in points — a reasonable, widely-printable default sheet size
+// regardless of what size the source pages happen to be.
+const NUP_SHEET = { width: 612, height: 792 };
+const NUP_MARGIN = 18;
+
+/**
+ * Lays multiple pages out on each output sheet (2/4/6/9-up), the same
+ * "print multiple pages per side" layout most print dialogs and PDF
+ * tools offer for saving paper. Each source page is embedded once via
+ * embedPdf, then stamped into a grid cell on however many new sheets are
+ * needed, scaled down (never up) to fit its cell while keeping its own
+ * aspect ratio — a source page smaller than its cell is simply centered,
+ * not stretched.
+ */
+export async function nUpPdf(file: File, layout: NUpLayout): Promise<Uint8Array> {
+  const { PDFDocument } = await getPdfLib();
+  const srcBytes = new Uint8Array(await file.arrayBuffer());
+  const srcDoc = await PDFDocument.load(srcBytes, { ignoreEncryption: true });
+  const pageCount = srcDoc.getPageCount();
+  if (pageCount === 0) throw new Error("This PDF has no pages.");
+
+  const outDoc = await PDFDocument.create();
+  const embeddedPages = await outDoc.embedPdf(srcBytes, Array.from({ length: pageCount }, (_, i) => i));
+
+  const [cols, rows] = NUP_GRID[layout];
+  const cellW = (NUP_SHEET.width - NUP_MARGIN * 2) / cols;
+  const cellH = (NUP_SHEET.height - NUP_MARGIN * 2) / rows;
+
+  for (let i = 0; i < embeddedPages.length; i += layout) {
+    const sheet = outDoc.addPage([NUP_SHEET.width, NUP_SHEET.height]);
+    const group = embeddedPages.slice(i, i + layout);
+    group.forEach((ep, idx) => {
+      const col = idx % cols;
+      const row = Math.floor(idx / cols);
+      const cellX = NUP_MARGIN + col * cellW;
+      const cellTop = NUP_SHEET.height - NUP_MARGIN - row * cellH;
+      const scale = Math.min(cellW / ep.width, cellH / ep.height, 1);
+      const w = ep.width * scale;
+      const h = ep.height * scale;
+      const x = cellX + (cellW - w) / 2;
+      const y = cellTop - cellH + (cellH - h) / 2;
+      sheet.drawPage(ep, { x, y, width: w, height: h });
+    });
+  }
+
+  return outDoc.save();
+}
+
 /* ------------------------ Range parsing ------------------------- */
 
 /** Parses "1-3,5,7-9" into zero-indexed page arrays, clamped to totalPages. */
@@ -264,6 +321,57 @@ export async function addPageNumbers(
     page.drawText(label, { x, y, size: fontSize, font, color: rgb(0.1, 0.12, 0.16) });
   });
   return doc.save();
+}
+
+export interface BatesOptions {
+  /** Letters before the number, e.g. "ABC-" — most firms use an all-caps case-code prefix. */
+  prefix: string;
+  /** Zero-padded digit width, e.g. 6 → 000001. */
+  digits: number;
+  startAt: number;
+  position: PageNumberPosition;
+  fontSize?: number;
+}
+
+export interface BatesResult {
+  name: string;
+  bytes: Uint8Array;
+}
+
+/**
+ * Stamps sequential Bates numbers (prefix + zero-padded counter, e.g.
+ * ABC-000001) across every page of every file, in the order the files
+ * are given — the counter keeps incrementing from one file into the
+ * next rather than restarting, which is the entire point of Bates
+ * numbering a multi-document production. Files are processed and
+ * returned in order so the caller can zip them with the same ordering.
+ */
+export async function addBatesNumbers(files: File[], opts: BatesOptions): Promise<BatesResult[]> {
+  const { rgb, StandardFonts } = await getPdfLib();
+  const fontSize = opts.fontSize ?? 9;
+  const margin = 24;
+  let counter = opts.startAt;
+  const results: BatesResult[] = [];
+
+  for (const file of files) {
+    const doc = await loadDoc(file);
+    const font = await doc.embedFont(StandardFonts.Helvetica);
+    const pages = doc.getPages();
+    pages.forEach((page) => {
+      const label = `${opts.prefix}${String(counter).padStart(opts.digits, "0")}`;
+      const { width, height } = page.getSize();
+      const textWidth = font.widthOfTextAtSize(label, fontSize);
+      let x = width / 2 - textWidth / 2;
+      if (opts.position.endsWith("right")) x = width - margin - textWidth;
+      if (opts.position.endsWith("left")) x = margin;
+      const y = opts.position.startsWith("top") ? height - margin : margin - fontSize * 0.3;
+      page.drawText(label, { x, y, size: fontSize, font, color: rgb(0.1, 0.12, 0.16) });
+      counter++;
+    });
+    results.push({ name: file.name, bytes: await doc.save() });
+  }
+
+  return results;
 }
 
 /* ---------------------------- Compress ---------------------------- */
@@ -699,6 +807,62 @@ export async function fillPdfForm(
   return doc.save();
 }
 
+export interface NewFieldSpec {
+  fieldName: string;
+  kind: "text" | "checkbox";
+  pageIndex: number;
+  /** PDF page space: bottom-left origin, y-up, in points — same convention as FormFieldWidget.rect. */
+  rect: { x: number; y: number; width: number; height: number };
+  multiline?: boolean;
+}
+
+/**
+ * Adds real, fillable AcroForm fields to a flat PDF at the given
+ * positions — the inverse of readPdfFormFields/fillPdfForm, for
+ * building a template rather than filling one out. Each field gets a
+ * visible border so it's findable on the page once downloaded; text
+ * fields need a font embedded up front for pdf-lib to generate their
+ * appearance stream.
+ */
+export async function createFillableForm(file: File, fields: NewFieldSpec[]): Promise<Uint8Array> {
+  const { StandardFonts, rgb } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const form = doc.getForm();
+  const pages = doc.getPages();
+
+  const usedNames = new Set<string>();
+  fields.forEach((f, i) => {
+    const page = pages[f.pageIndex];
+    if (!page) return;
+    // Field names must be unique within the form — fall back to a
+    // guaranteed-unique name rather than letting pdf-lib throw and
+    // aborting every field after a duplicate.
+    let name = f.fieldName.trim() || `field_${i + 1}`;
+    if (usedNames.has(name)) name = `${name}_${i + 1}`;
+    usedNames.add(name);
+
+    if (f.kind === "checkbox") {
+      const cb = form.createCheckBox(name);
+      cb.addToPage(page, { x: f.rect.x, y: f.rect.y, width: f.rect.width, height: f.rect.height, borderWidth: 1, borderColor: rgb(0.1, 0.12, 0.16) });
+    } else {
+      const tf = form.createTextField(name);
+      if (f.multiline) tf.enableMultiline();
+      tf.addToPage(page, {
+        x: f.rect.x,
+        y: f.rect.y,
+        width: f.rect.width,
+        height: f.rect.height,
+        borderWidth: 1,
+        borderColor: rgb(0.1, 0.12, 0.16),
+        font,
+      });
+    }
+  });
+
+  return doc.save();
+}
+
 /**
  * Bakes a PDF's fillable form fields into permanent page content and
  * removes the underlying fields, so the values can no longer be edited —
@@ -710,6 +874,97 @@ export async function flattenPdf(file: File): Promise<Uint8Array> {
   const form = doc.getForm();
   if (form.getFields().length === 0) throw new Error("This PDF doesn't have any fillable form fields to flatten.");
   form.flatten();
+  return doc.save();
+}
+
+/* ---------------------------- Edit existing text ---------------------------- */
+
+export interface EditableTextItem {
+  id: number;
+  pageIndex: number;
+  /** The text as it currently appears on the page. */
+  text: string;
+  /** PDF page space: bottom-left origin, y-up, in points — the baseline origin pdf.js reports for this run. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fontSize: number;
+}
+
+/**
+ * Reads every run of text pdf.js finds on the page (its own text-layer
+ * granularity — usually a word or short phrase, whatever the PDF's
+ * internal content stream happens to group together) along with its
+ * exact on-page position and approximate font size, so a caller can
+ * offer each one as something clickable to edit.
+ */
+export async function getEditableTextItems(file: File): Promise<EditableTextItem[]> {
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  const items: EditableTextItem[] = [];
+  let id = 0;
+
+  for (let i = 0; i < pdf.numPages; i++) {
+    const page = await pdf.getPage(i + 1);
+    const textContent = await page.getTextContent();
+    for (const it of textContent.items as any[]) {
+      if (typeof it.str !== "string" || it.str.trim() === "") continue;
+      const [a, b, , , e, f] = it.transform as number[];
+      const fontSize = Math.hypot(a, b) || 10;
+      items.push({
+        id: id++,
+        pageIndex: i,
+        text: it.str,
+        x: e,
+        y: f,
+        width: (it.width as number) || fontSize * it.str.length * 0.5,
+        height: (it.height as number) || fontSize,
+        fontSize,
+      });
+    }
+  }
+  return items;
+}
+
+/**
+ * Applies edits by covering each changed run's original position with a
+ * white rectangle and drawing the replacement text in its place with a
+ * standard font at roughly the same size — the same practical technique
+ * most free in-browser "edit PDF text" tools use, since surgically
+ * rewriting a PDF's actual content stream while preserving its original
+ * embedded font would require a full content-stream parser/re-encoder.
+ * This means an edit blends in cleanly on a plain white page but will
+ * show a visible patch over a colored background, image, or non-default
+ * font — a real, worth-stating limitation, not a bug. Items whose text
+ * is unchanged are left completely untouched.
+ */
+export async function applyTextEdits(file: File, items: EditableTextItem[], edits: Map<number, string>): Promise<Uint8Array> {
+  const { rgb, StandardFonts } = await getPdfLib();
+  const doc = await loadDoc(file);
+  const font = await doc.embedFont(StandardFonts.Helvetica);
+  const pages = doc.getPages();
+
+  for (const item of items) {
+    const newText = edits.get(item.id);
+    if (newText === undefined || newText === item.text) continue;
+    const page = pages[item.pageIndex];
+    if (!page) continue;
+
+    const newWidth = newText.trim() ? font.widthOfTextAtSize(newText, item.fontSize) : 0;
+    page.drawRectangle({
+      x: item.x - 1,
+      y: item.y - item.height * 0.28,
+      width: Math.max(item.width, newWidth) + 3,
+      height: item.height * 1.35,
+      color: rgb(1, 1, 1),
+    });
+    if (newText.trim()) {
+      page.drawText(newText, { x: item.x, y: item.y, size: item.fontSize, font, color: rgb(0.06, 0.06, 0.08) });
+    }
+  }
+
   return doc.save();
 }
 
@@ -1115,17 +1370,52 @@ function escapeHtml(s: string): string {
 
 /* ---------------------------- Protect / Unlock ---------------------------- */
 
+export interface ProtectPermissions {
+  /** Print the document at all (low-res). */
+  allowPrinting?: boolean;
+  /** Print at full quality — most viewers also require allowPrinting for this to matter. */
+  allowHighQualityPrint?: boolean;
+  /** Edit the document's content (text, images, pages). */
+  allowModifying?: boolean;
+  /** Copy text/images out of the document. */
+  allowCopying?: boolean;
+  /** Add or edit comments and form fields. */
+  allowAnnotating?: boolean;
+  /** Fill in existing form fields without being able to edit page content. */
+  allowFillingForms?: boolean;
+}
+
 /**
  * Encrypts a PDF with a password (AES-256, via Web Crypto — no native
  * dependencies). Unlike everything else in this file, this doesn't go
  * through pdf-lib's own APIs, since pdf-lib itself doesn't implement
  * encryption — @pdfsmaller/pdf-encrypt is a small, purpose-built library
  * that does, with pdf-lib only as its peer dependency.
+ *
+ * The permission flags below are the standard PDF permissions bitmask
+ * (what Acrobat's own "Restrict Editing" calls "printing," "content
+ * copying," etc.) — they aren't a second password, so they only stop
+ * compliant PDF viewers from offering those actions; they're not a
+ * substitute for the user password when real confidentiality matters.
+ * allowExtraction and allowAssembly are tied to allowCopying/
+ * allowModifying respectively rather than exposed as their own toggles,
+ * since most people don't distinguish "copy for accessibility" from
+ * "copy" or "reassemble pages" from "edit" in practice.
  */
-export async function protectPdf(file: File, password: string): Promise<Uint8Array> {
+export async function protectPdf(file: File, password: string, permissions?: ProtectPermissions): Promise<Uint8Array> {
   const { encryptPDF } = await import("@pdfsmaller/pdf-encrypt");
   const bytes = new Uint8Array(await file.arrayBuffer());
-  return encryptPDF(bytes, password);
+  const p = permissions;
+  return encryptPDF(bytes, password, p ? {
+    allowPrinting: p.allowPrinting,
+    allowHighQualityPrint: p.allowHighQualityPrint ?? p.allowPrinting,
+    allowModifying: p.allowModifying,
+    allowAssembly: p.allowModifying,
+    allowCopying: p.allowCopying,
+    allowExtraction: p.allowCopying,
+    allowAnnotating: p.allowAnnotating,
+    allowFillingForms: p.allowFillingForms,
+  } : undefined);
 }
 
 /**

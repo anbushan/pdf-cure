@@ -49,6 +49,10 @@ import {
   Scaling,
   Volume2,
   Accessibility,
+  Grid2x2,
+  ListOrdered,
+  ClipboardEdit,
+  Edit3,
   type LucideIcon,
 } from "lucide-react";
 
@@ -68,6 +72,8 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   organize: LayoutGrid,
   "extract-images": Images,
   batch: Layers,
+  "n-up": Grid2x2,
+  "bates-numbering": ListOrdered,
   compress: Gauge,
   "compress-to-size": Target,
   repair: Wrench,
@@ -97,6 +103,8 @@ export const TOOL_ICONS: Record<string, LucideIcon> = {
   "add-qrcode": QrCode,
   "add-text": Type,
   "fill-form": FormInput,
+  "create-form": ClipboardEdit,
+  "edit-text": Edit3,
   "highlight-pdf": Highlighter,
   "id-photo": Contact2,
   "edit-metadata": Tags,

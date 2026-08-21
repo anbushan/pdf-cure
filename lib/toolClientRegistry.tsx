@@ -15,6 +15,8 @@ import Client_organize from "@/app/tools/organize/Client";
 import Client_compare from "@/app/tools/compare/Client";
 import Client_extract_images from "@/app/tools/extract-images/Client";
 import Client_batch from "@/app/tools/batch/Client";
+import Client_n_up from "@/app/tools/n-up/Client";
+import Client_bates_numbering from "@/app/tools/bates-numbering/Client";
 import Client_compress from "@/app/tools/compress/Client";
 import Client_compress_to_size from "@/app/tools/compress-to-size/Client";
 import Client_repair from "@/app/tools/repair/Client";
@@ -44,6 +46,8 @@ import Client_image_watermark from "@/app/tools/image-watermark/Client";
 import Client_add_qrcode from "@/app/tools/add-qrcode/Client";
 import Client_add_text from "@/app/tools/add-text/Client";
 import Client_fill_form from "@/app/tools/fill-form/Client";
+import Client_create_form from "@/app/tools/create-form/Client";
+import Client_edit_text from "@/app/tools/edit-text/Client";
 import Client_highlight_pdf from "@/app/tools/highlight-pdf/Client";
 import Client_id_photo from "@/app/tools/id-photo/Client";
 import Client_edit_metadata from "@/app/tools/edit-metadata/Client";
@@ -80,6 +84,8 @@ export const TOOL_CLIENTS: Record<string, ComponentType> = {
   "compare": Client_compare,
   "extract-images": Client_extract_images,
   "batch": Client_batch,
+  "n-up": Client_n_up,
+  "bates-numbering": Client_bates_numbering,
   "compress": Client_compress,
   "compress-to-size": Client_compress_to_size,
   "repair": Client_repair,
@@ -109,6 +115,8 @@ export const TOOL_CLIENTS: Record<string, ComponentType> = {
   "add-qrcode": Client_add_qrcode,
   "add-text": Client_add_text,
   "fill-form": Client_fill_form,
+  "create-form": Client_create_form,
+  "edit-text": Client_edit_text,
   "highlight-pdf": Client_highlight_pdf,
   "id-photo": Client_id_photo,
   "edit-metadata": Client_edit_metadata,
