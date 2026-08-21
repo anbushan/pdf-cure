@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { CATEGORIES, CATEGORY_TKEY, TOOLS } from "@/lib/toolsConfig";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
+import { localePath } from "@/lib/i18n/localePath";
 import InstallPrompt from "./InstallPrompt";
 
 export default function Footer() {
@@ -25,12 +26,14 @@ export default function Footer() {
             if (tools.length === 0) return null;
             return (
               <div key={category}>
-                <p className="eyebrow text-ink-faint mb-2.5">{t(CATEGORY_TKEY[category])}</p>
+                <Link href={localePath(locale, `/category/${category.toLowerCase()}`)} className="eyebrow block text-ink-faint hover:text-ink transition-colors mb-2.5">
+                  {t(CATEGORY_TKEY[category])}
+                </Link>
                 <ul className="space-y-1.5">
                   {tools.map((tool) => (
                     <li key={tool.slug}>
                       <Link
-                        href={`/tools/${tool.slug}`}
+                        href={localePath(locale, `/tools/${tool.slug}`)}
                         className="text-xs text-ink-faint hover:text-ink transition-colors"
                       >
                         {getToolLabel(tool.slug, locale, tool.name, tool.description).name}

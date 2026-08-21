@@ -37,3 +37,14 @@ export const DEFAULT_LOCALE = "en";
 
 // Languages that read right-to-left — used to flip <html dir="rtl">.
 export const RTL_LOCALES = new Set(["ar"]);
+
+/**
+ * Phase 1 of giving translated content its own indexable URLs (see the
+ * /[locale] route tree). English stays unprefixed at today's URLs — these
+ * are the languages that additionally get a real /{locale}/... URL with
+ * hreflang links back to English and each other, picked for search volume
+ * among the highest-traffic PDF-tool markets. The rest of LOCALES above
+ * remain available through the in-app language switcher (client-side UI
+ * translation only, no dedicated URL) until they're promoted here too.
+ */
+export const ROUTED_LOCALES = ["es", "fr", "de", "pt", "ja", "hi", "id", "ar"];

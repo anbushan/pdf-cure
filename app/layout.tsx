@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,16 +16,19 @@ import CookieBanner from "@/components/CookieBanner";
 import ScrollToTop from "@/components/ScrollToTop";
 import FeedbackButton from "@/components/FeedbackButton";
 import { SITE_URL, SITE_NAME, INDEXING_ENABLED } from "@/lib/pageMetadata";
+import { ROUTED_LOCALES, DEFAULT_LOCALE } from "@/lib/i18n/locales";
 
-// Inter — same typeface used on nextjs.org alongside Geist; clean, geometric, excellent legibility
-const interDisplay = Inter({
+// Source Sans 3 — the free Google Font Smallpdf's own site uses; clean,
+// humanist, and reads a little more approachable than Inter's geometric
+// grid, which is the point of matching it.
+const sourceSansDisplay = Source_Sans_3({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
 
-const interBody = Inter({
+const sourceSansBody = Source_Sans_3({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-body",
@@ -54,6 +57,14 @@ export const metadata: Metadata = {
   // /admin and the scan-to-pdf mobile page currently do (they stay
   // noindex regardless, on purpose).
   robots: INDEXING_ENABLED ? { index: true, follow: true } : { index: false, follow: false },
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      [DEFAULT_LOCALE]: SITE_URL,
+      ...Object.fromEntries(ROUTED_LOCALES.map((l) => [l, `${SITE_URL}/${l}`])),
+      "x-default": SITE_URL,
+    },
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -73,7 +84,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: SITE_NAME,
     type: "website",
-    images: [{ url: "/og-image.png", width: 512, height: 512 }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary",
@@ -84,19 +95,32 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF8F3" },
-    { media: "(prefers-color-scheme: dark)", color: "#161513" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#121214" },
   ],
   width: "device-width",
   initialScale: 1,
 };
 
+// A single @graph combining both types is the pattern Google's own docs
+// use for a site that is both a WebSite and the Organization behind it —
+// one script tag instead of two competing root objects.
 const siteJsonLd = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: SITE_NAME,
-  url: SITE_URL,
-  description: "Free, private PDF tools that run entirely in your browser.",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: SITE_URL,
+      description: "Free, private PDF tools that run entirely in your browser.",
+    },
+    {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: `${SITE_URL}/brand/logo-full.png`,
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -104,8 +128,19 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Deliberately NOT reading the /[locale] segment here via headers()/
+  // cookies() — that was tried and reverted: it correctly rendered each
+  // locale's <html lang> and body on the server, but because this layout
+  // is shared by every route, calling a dynamic API in it forces the
+  // *entire site* out of static generation (verified: all ~500 previously
+  // static pages, English included, flipped to server-rendered-per-request).
+  // That's a bad trade for fixing a secondary flash-of-English on brand
+  // new locale pages. LocaleSync (client-side, see components/LocaleSync)
+  // corrects the locale post-hydration instead — the metadata (title,
+  // description, hreflang), which is what actually drives search results,
+  // is already correct pre-hydration via generateMetadata.
   return (
-    <html lang="en" suppressHydrationWarning className={`${interDisplay.variable} ${interBody.variable} ${mono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sourceSansDisplay.variable} ${sourceSansBody.variable} ${mono.variable}`}>
       <head>
         {/* Runs before paint so there's no flash of the wrong theme on load. */}
         <script

@@ -31,7 +31,7 @@ export const TOOLS: ToolMeta[] = [
 
   // Organize
   { slug: "merge", name: "Merge PDF", description: "Combine PDFs in the order you want.", category: "Organize", status: "live", accent: "teal" },
-  { slug: "split", name: "Split PDF", description: "Break a PDF into separate files by page range.", category: "Organize", status: "live", accent: "teal" },
+  { slug: "split", name: "Split PDF", description: "Break a PDF into separate files by page range, or into equal chunks.", category: "Organize", status: "live", accent: "teal" },
   { slug: "remove-pages", name: "Remove pages", description: "Delete specific pages from a PDF.", category: "Organize", status: "live", accent: "teal" },
   { slug: "extract-pages", name: "Extract pages", description: "Pull selected pages into a new PDF.", category: "Organize", status: "live", accent: "teal" },
   { slug: "organize", name: "Organize PDF", description: "Reorder, rotate, or delete pages visually.", category: "Organize", status: "live", accent: "teal" },
@@ -47,10 +47,12 @@ export const TOOLS: ToolMeta[] = [
 
   // Convert
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn images into a PDF in seconds.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "heic-to-pdf", name: "HEIC to PDF", description: "Turn iPhone HEIC/HEIF photos into a PDF, converted right in your browser.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-jpg", name: "PDF to JPG", description: "Export each page as a JPG image.", category: "Convert", status: "live", accent: "amber" },
   { slug: "scan-to-pdf", name: "Scan to PDF", description: "Scan documents from your phone straight into a PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-pdfa", name: "PDF to PDF/A", description: "Convert a PDF to the PDF/A archival format.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-markdown", name: "PDF to Markdown", description: "Turn a PDF into clean Markdown — headings, tables, and links intact.", category: "Convert", status: "live", accent: "amber" },
+  { slug: "pdf-to-text", name: "PDF to Text", description: "Pull the plain, copyable text out of a PDF and save it as a .txt file.", category: "Convert", status: "live", accent: "amber" },
   { slug: "word-to-pdf", name: "Word to PDF", description: "Convert .docx files to PDF.", category: "Convert", status: "live", accent: "amber" },
   { slug: "pdf-to-word", name: "PDF to Word", description: "Export PDF text into an editable .docx.", category: "Convert", status: "live", accent: "amber" },
   { slug: "excel-to-pdf", name: "Excel to PDF", description: "Convert spreadsheets to PDF.", category: "Convert", status: "live", accent: "amber" },
@@ -73,6 +75,9 @@ export const TOOLS: ToolMeta[] = [
   { slug: "highlight-pdf", name: "Highlight & Annotate PDF", description: "Highlight text and add sticky-note comments directly on a page.", category: "Edit", status: "live", accent: "rust" },
   { slug: "id-photo", name: "ID Photo Maker", description: "Crop and resize a photo to a standard passport or ID size with a solid background.", category: "Edit", status: "live", accent: "rust" },
   { slug: "edit-metadata", name: "Edit PDF Metadata", description: "Set a PDF's title, author, subject, and keywords.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "flatten-pdf", name: "Flatten PDF", description: "Bake a filled-out form's values into the page permanently, so it can no longer be edited.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "resize-pdf", name: "Resize PDF Pages", description: "Rescale every page to a standard size like A4, Letter, Legal, or A3.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "read-aloud", name: "Read PDF Aloud", description: "Listen to a document read aloud using your browser's built-in voice, page by page.", category: "Edit", status: "live", accent: "rust" },
 
   // Security
   { slug: "sign", name: "Sign PDF", description: "Draw or type a signature and place it on the page.", category: "Security", status: "live", accent: "rust" },
@@ -95,3 +100,18 @@ export const CATEGORY_TKEY: Record<ToolCategory, "catAI" | "catOrganize" | "catO
 export function getTool(slug: string): ToolMeta | undefined {
   return TOOLS.find((t) => t.slug === slug);
 }
+
+/** One-paragraph intro copy for each category's hub page (/category/[slug]) — distinct from any single tool's own description, for unique on-page content. */
+export const CATEGORY_INTRO: Record<ToolCategory, string> = {
+  Organize:
+    "Reshape a document without touching what's on the page — merge several PDFs into one, split one into many, reorder pages, or pull specific pages out.",
+  Optimize:
+    "Fix a file rather than change its content — shrink a bloated PDF down to a target size, rebuild a damaged one, or make a scanned document searchable.",
+  Convert:
+    "Move content between PDF and the format you actually need it in — Word, Excel, PowerPoint, images, Markdown, and more, in both directions.",
+  Edit:
+    "Make small changes directly on the page — stamp a watermark or page numbers, annotate, fill in a form, add a photo or QR code, or resize the whole document.",
+  Security:
+    "Control who can open, read, or edit a PDF — add or remove a password, sign it, or permanently black out sensitive text.",
+  AI: "AI-assisted reading and writing for PDFs — summarizing a long document, chatting with it, and translating it into another language.",
+};

@@ -26,7 +26,11 @@ export const TOOL_KEYWORDS: Record<string, string[]> = {
   "extract-pages": ["extract pdf pages", "pull pages from pdf"],
   organize: ["organize pdf", "reorder pdf pages", "rearrange pdf"],
   compare: ["compare pdf", "pdf diff", "compare two pdfs"],
+  "extract-images": ["extract images from pdf", "pdf to images", "save pdf images"],
+  batch: ["batch pdf processing", "bulk pdf compress", "process multiple pdfs"],
+  "compress-to-size": ["compress pdf to target size", "reduce pdf to specific size", "pdf under 1mb"],
   "jpg-to-pdf": ["jpg to pdf", "image to pdf", "jpeg to pdf", "png to pdf", "photo to pdf", "img to pdf", "jpg to pdf converter"],
+  "heic-to-pdf": ["heic to pdf", "heif to pdf", "iphone photos to pdf", "heic to pdf converter"],
   "pdf-to-jpg": ["pdf to jpg", "pdf to image", "pdf to jpg converter", "pdf to png", "pdf to jpeg", "convert pdf to jpg"],
   "word-to-pdf": ["word to pdf", "word to pdf converter", "convert word to pdf", "doc to pdf", "docx to pdf"],
   "pdf-to-word": ["pdf to word", "pdf to word converter", "convert pdf to word", "pdf to doc", "pdf to docx"],
@@ -38,10 +42,23 @@ export const TOOL_KEYWORDS: Record<string, string[]> = {
   "scan-to-pdf": ["scan to pdf", "scan document to pdf", "phone scanner pdf"],
   "pdf-to-pdfa": ["pdf to pdf/a", "pdf/a converter", "archive pdf"],
   "pdf-to-markdown": ["pdf to markdown", "pdf to md"],
+  "pdf-to-text": ["pdf to text", "pdf to txt", "extract text from pdf", "convert pdf to text"],
+  "bank-statement-to-excel": ["bank statement to excel", "bank statement converter", "pdf statement to csv"],
+  "flatten-pdf": ["flatten pdf", "flatten pdf form", "make pdf form uneditable"],
+  "resize-pdf": ["resize pdf", "change pdf page size", "pdf page size converter", "a4 to letter pdf"],
+  "read-aloud": ["read pdf aloud", "pdf text to speech", "listen to pdf", "pdf reader aloud"],
   watermark: ["watermark pdf", "add watermark to pdf"],
   "page-numbers": ["add page numbers to pdf", "pdf page numbers"],
   rotate: ["rotate pdf", "rotate pdf pages"],
   crop: ["crop pdf", "trim pdf margins"],
+  "add-image": ["add image to pdf", "insert photo into pdf", "add logo to pdf"],
+  "image-watermark": ["image watermark pdf", "add logo watermark pdf"],
+  "add-qrcode": ["add qr code to pdf", "generate qr code pdf", "pdf qr code"],
+  "add-text": ["add text to pdf", "type on pdf", "insert text into pdf"],
+  "fill-form": ["fill pdf form", "pdf form filler", "complete pdf form online"],
+  "highlight-pdf": ["highlight pdf", "annotate pdf", "pdf comment tool"],
+  "id-photo": ["id photo maker", "passport photo online", "visa photo size"],
+  "edit-metadata": ["edit pdf metadata", "change pdf author title", "pdf properties editor"],
   sign: ["sign pdf", "pdf signature", "esign pdf"],
   protect: ["password protect pdf", "encrypt pdf", "add password to pdf"],
   unlock: ["unlock pdf", "remove password from pdf", "pdf password remover", "decrypt pdf"],
@@ -51,6 +68,8 @@ export const TOOL_KEYWORDS: Record<string, string[]> = {
   translate: ["translate pdf", "pdf translator"],
   "ai-html-to-pdf": ["ai html to pdf"],
   "ai-pdf-to-html": ["ai pdf to html"],
+  "detect-plagiarism": ["detect plagiarism", "ai content detector", "plagiarism checker"],
+  "remove-background": ["remove background from image", "background remover", "transparent background image"],
 };
 
 export interface ToolSeoOverride {
@@ -127,5 +146,129 @@ export const TOOL_SEO_OVERRIDES: Record<string, ToolSeoOverride> = {
   "html-to-pdf": {
     title: "HTML to PDF Converter Free — Convert Webpage to PDF | PDFCure",
     description: "Convert an HTML file or snippet to PDF for free, entirely in your browser.",
+  },
+  "extract-pages": {
+    title: "Extract Pages from PDF Free — PDF Page Extractor | PDFCure",
+    description: "Pull specific pages out of a PDF into a brand-new file, for free, entirely in your browser. No upload, no sign-up.",
+  },
+  organize: {
+    title: "Organize PDF Free — Reorder & Rearrange PDF Pages | PDFCure",
+    description: "Drag to reorder, rotate, or delete pages visually — free, entirely in your browser, with no upload and no sign-up.",
+  },
+  compare: {
+    title: "Compare PDF Free — See Differences Between Two PDFs | PDFCure",
+    description: "Spot exactly what changed between two versions of a PDF, for free, entirely in your browser. No upload required.",
+  },
+  "extract-images": {
+    title: "Extract Images from PDF Free — Save Photos as JPG/PNG | PDFCure",
+    description: "Pull every embedded photo and logo out of a PDF into a zip of image files, for free, entirely in your browser.",
+  },
+  batch: {
+    title: "Batch Process PDFs Free — Compress, Watermark & More | PDFCure",
+    description: "Compress, watermark, protect, or unlock many PDFs at once and download them together in a zip — free, no upload.",
+  },
+  "compress-to-size": {
+    title: "Compress PDF to Target Size Free — Hit an Exact File Size | PDFCure",
+    description: "Shrink a PDF down until it fits under the exact size you choose — for email or upload limits, free, no upload.",
+  },
+  repair: {
+    title: "Repair PDF Free — Fix a Corrupted or Damaged PDF | PDFCure",
+    description: "Attempt to rebuild a broken or corrupted PDF so it opens normally again — free, entirely in your browser.",
+  },
+  ocr: {
+    title: "OCR PDF Free — Make a Scanned PDF Searchable | PDFCure",
+    description: "Turn a scanned PDF's pages into searchable, selectable text for free, entirely in your browser. No upload needed.",
+  },
+  "heic-to-pdf": {
+    title: "HEIC to PDF Converter Free — iPhone Photos to PDF | PDFCure",
+    description: "Turn iPhone HEIC/HEIF photos into a PDF for free, converted right in your browser. No upload, no sign-up.",
+  },
+  "scan-to-pdf": {
+    title: "Scan to PDF Free — Scan Documents from Your Phone | PDFCure",
+    description: "Scan a document with your phone's camera straight into a PDF on your computer — free, no app to install.",
+  },
+  "pdf-to-pdfa": {
+    title: "PDF to PDF/A Converter Free — Archival PDF Format | PDFCure",
+    description: "Convert a PDF to the PDF/A archival format for long-term storage, free, entirely in your browser.",
+  },
+  "pdf-to-markdown": {
+    title: "PDF to Markdown Converter Free — Clean MD Output | PDFCure",
+    description: "Turn a PDF into clean Markdown with headings, tables, and links intact — free, entirely in your browser.",
+  },
+  "pdf-to-text": {
+    title: "PDF to Text Converter Free — Extract Text from PDF | PDFCure",
+    description: "Pull the plain, copyable text out of a PDF and save it as a .txt file — free, entirely in your browser.",
+  },
+  "bank-statement-to-excel": {
+    title: "Bank Statement to Excel Free — PDF Statement Converter | PDFCure",
+    description: "Turn a bank statement PDF into a clean spreadsheet with dates, amounts, and running balance — free, no upload.",
+  },
+  watermark: {
+    title: "Add Watermark to PDF Free — Stamp Text on Every Page | PDFCure",
+    description: "Stamp custom text across every page of a PDF for free, entirely in your browser. No upload, no sign-up.",
+  },
+  "page-numbers": {
+    title: "Add Page Numbers to PDF Free — Choose Position & Style | PDFCure",
+    description: "Add page numbers to a PDF with your choice of position and starting number — free, entirely in your browser.",
+  },
+  rotate: {
+    title: "Rotate PDF Free — Rotate Pages Online | PDFCure",
+    description: "Rotate one page or an entire PDF document for free, entirely in your browser. No upload, no sign-up.",
+  },
+  "add-image": {
+    title: "Add Image to PDF Free — Place a Photo or Logo on a Page | PDFCure",
+    description: "Drag a photo or logo onto any page of a PDF, resize it, and it's placed automatically — free, no upload.",
+  },
+  "image-watermark": {
+    title: "Image Watermark for PDF Free — Stamp a Logo on Every Page | PDFCure",
+    description: "Stamp a logo or image across every page with adjustable opacity and size — free, entirely in your browser.",
+  },
+  "add-qrcode": {
+    title: "Add QR Code to PDF Free — Generate & Place a QR Code | PDFCure",
+    description: "Generate a QR code from a link or text and place it on any page of a PDF — free, entirely in your browser.",
+  },
+  "add-text": {
+    title: "Add Text to PDF Free — Type Directly onto a PDF Page | PDFCure",
+    description: "Type free-form text directly onto a PDF page — handy for filling a blank on a scanned form — free, no upload.",
+  },
+  "fill-form": {
+    title: "Fill PDF Form Free — Complete Fillable PDF Forms Online | PDFCure",
+    description: "Fill out a fillable PDF's own form fields — text, checkboxes, dropdowns — and download it, free, no upload.",
+  },
+  "highlight-pdf": {
+    title: "Highlight & Annotate PDF Free — Add Comments to a PDF | PDFCure",
+    description: "Highlight text and add sticky-note comments directly on a page, free, entirely in your browser.",
+  },
+  "id-photo": {
+    title: "ID Photo Maker Free — Passport & Visa Photo Online | PDFCure",
+    description: "Crop and resize a photo to a standard passport or ID size with a solid background — free, no upload.",
+  },
+  "edit-metadata": {
+    title: "Edit PDF Metadata Free — Change Title, Author & Keywords | PDFCure",
+    description: "Set a PDF's title, author, subject, and keywords for free, entirely in your browser. No upload, no sign-up.",
+  },
+  "flatten-pdf": {
+    title: "Flatten PDF Free — Make a Filled Form Uneditable | PDFCure",
+    description: "Bake a filled-out PDF form's values permanently into the page, free, entirely in your browser. No upload.",
+  },
+  "resize-pdf": {
+    title: "Resize PDF Free — Change Page Size to A4, Letter & More | PDFCure",
+    description: "Rescale every page of a PDF to a standard size like A4, Letter, Legal, or A3 — free, entirely in your browser.",
+  },
+  "read-aloud": {
+    title: "Read PDF Aloud Free — Text-to-Speech PDF Reader | PDFCure",
+    description: "Listen to a PDF read aloud page by page using your browser's built-in voice — free, no upload, no account.",
+  },
+  sign: {
+    title: "Sign PDF Free — eSign a Document Online | PDFCure",
+    description: "Draw or type a signature and place it on a PDF page for free, entirely in your browser. No upload, no account.",
+  },
+  redact: {
+    title: "Redact PDF Free — Permanently Black Out Sensitive Text | PDFCure",
+    description: "Black out and permanently flatten sensitive areas of a PDF, free, entirely in your browser. No upload.",
+  },
+  protect: {
+    title: "Password Protect PDF Free — Encrypt with AES-256 | PDFCure",
+    description: "Add a password to a PDF, encrypted with AES-256, for free, entirely in your browser. No upload, no sign-up.",
   },
 };

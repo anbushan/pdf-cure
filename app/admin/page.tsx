@@ -74,7 +74,7 @@ export default function AdminDashboardPage() {
             <span className="text-xs text-ink-faint">{recentSignups} total</span>
           </div>
           <div className="mt-4">
-            <MiniBarChart data={data.signups.map((d) => ({ day: d.day, value: d.count }))} color="#2E5A50" />
+            <MiniBarChart data={data.signups.map((d) => ({ day: d.day, value: d.count }))} color="#0B9498" />
           </div>
         </div>
 
@@ -88,7 +88,7 @@ export default function AdminDashboardPage() {
           <div className="mt-4">
             <MiniBarChart
               data={data.revenue.map((d) => ({ day: d.day, value: d.amount }))}
-              color="#C6852A"
+              color="#0048D9"
               formatValue={(v) => `₹${v.toLocaleString("en-IN")}`}
             />
           </div>

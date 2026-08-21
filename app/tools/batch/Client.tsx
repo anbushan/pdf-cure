@@ -8,6 +8,7 @@ import Dropzone from "@/components/Dropzone";
 import { compressPdf, addWatermark, protectPdf, unlockPdf } from "@/lib/pdfTools";
 import { formatBytes, stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
+import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("batch")!;
 
@@ -93,6 +94,7 @@ export default function BatchPage() {
 
     setResults(out);
     setRunning(false);
+    if (out.some((r) => r.status === "done")) trackEvent("tool_success", { page: "/tools/batch", operation });
   }
 
   async function downloadZip() {

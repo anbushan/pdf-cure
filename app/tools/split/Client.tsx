@@ -8,7 +8,7 @@ import Dropzone from "@/components/Dropzone";
 import ResultPanel from "@/components/ResultPanel";
 import FilePreview from "@/components/FilePreview";
 import { getPdfPageCount } from "@/lib/pdfRender";
-import { parseRanges, splitByRanges } from "@/lib/pdfTools";
+import { parseRanges, splitByRanges, splitEveryNPages } from "@/lib/pdfTools";
 import { stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
 
@@ -17,7 +17,9 @@ const tool = getTool("split")!;
 export default function SplitPage() {
   const [file, setFile] = useState<File | null>(null);
   const [pageCount, setPageCount] = useState(0);
+  const [mode, setMode] = useState<"ranges" | "every">("ranges");
   const [ranges, setRanges] = useState("");
+  const [everyN, setEveryN] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   useErrorToast(error);
@@ -30,6 +32,7 @@ export default function SplitPage() {
     const count = await getPdfPageCount(f);
     setPageCount(count);
     setRanges(count > 1 ? `1-${Math.ceil(count / 2)},${Math.ceil(count / 2) + 1}-${count}` : "1");
+    setEveryN(Math.min(10, count) || 1);
   }
 
   async function handleSplit() {
@@ -37,7 +40,10 @@ export default function SplitPage() {
     setBusy(true);
     setError(null);
     try {
-      const groups = parseRanges(ranges, pageCount);
+      const groups =
+        mode === "ranges"
+          ? parseRanges(ranges, pageCount)
+          : splitEveryNPages(pageCount, everyN);
       if (groups.length === 0) throw new Error("Enter at least one valid page range, e.g. 1-3,5,7-9");
       const parts = await splitByRanges(file, groups);
       const { default: JSZip } = await import("jszip");
@@ -59,6 +65,7 @@ export default function SplitPage() {
     setResult(null);
     setError(null);
     setRanges("");
+    setMode("ranges");
   }
 
   return (
@@ -78,16 +85,52 @@ export default function SplitPage() {
         ) : (
           <div className="paper-stack p-6">
             <FilePreview file={file} className="mb-5" />
-            <label className="mt-5 block text-sm font-medium text-ink">Page ranges</label>
-            <input
-              value={ranges}
-              onChange={(e) => setRanges(e.target.value)}
-              placeholder="e.g. 1-3,5,7-9"
-              className="mt-1.5 w-full rounded-md border border-paper-line bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber"
-            />
-            <p className="mt-1.5 text-xs text-ink-faint">
-              Each comma-separated group becomes its own PDF. This document has {pageCount} page{pageCount === 1 ? "" : "s"}.
-            </p>
+
+            <div className="mt-5 flex gap-2">
+              {(["ranges", "every"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
+                    mode === m ? "border-amber bg-amber-light/40" : "border-paper-line text-ink-faint hover:border-ink-faint/40"
+                  }`}
+                >
+                  {m === "ranges" ? "Custom ranges" : "Every N pages"}
+                </button>
+              ))}
+            </div>
+
+            {mode === "ranges" ? (
+              <>
+                <label className="mt-4 block text-sm font-medium text-ink">Page ranges</label>
+                <input
+                  value={ranges}
+                  onChange={(e) => setRanges(e.target.value)}
+                  placeholder="e.g. 1-3,5,7-9"
+                  className="mt-1.5 w-full rounded-md border border-paper-line bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber"
+                />
+                <p className="mt-1.5 text-xs text-ink-faint">
+                  Each comma-separated group becomes its own PDF. This document has {pageCount} page{pageCount === 1 ? "" : "s"}.
+                </p>
+              </>
+            ) : (
+              <>
+                <label className="mt-4 block text-sm font-medium text-ink">Pages per file</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={Math.max(1, pageCount)}
+                  value={everyN}
+                  onChange={(e) => setEveryN(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                  className="mt-1.5 w-32 rounded-md border border-paper-line bg-white px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber"
+                />
+                <p className="mt-1.5 text-xs text-ink-faint">
+                  Splits this {pageCount}-page document into {Math.ceil(pageCount / Math.max(1, everyN)) || 0} equal parts of{" "}
+                  {everyN} page{everyN === 1 ? "" : "s"} each (the last part may be shorter).
+                </p>
+              </>
+            )}
+
             {error && <p className="mt-3 text-sm text-rust-dark">{error}</p>}
             <div className="mt-5 flex justify-end gap-3">
               <button onClick={reset} className="rounded-md border border-paper-line px-5 py-2.5 text-sm font-medium text-ink-faint hover:text-ink">

@@ -9,6 +9,11 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      // Account and admin pages require auth and carry their own noindex
+      // meta already — excluding them here too saves crawl budget and
+      // keeps them out of server logs analyzed by bots. The API isn't
+      // a page a crawler should ever fetch.
+      disallow: ["/account/", "/admin/", "/api/"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

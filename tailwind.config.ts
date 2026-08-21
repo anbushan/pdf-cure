@@ -46,8 +46,8 @@ const config: Config = {
         mono: ["var(--font-mono)", "monospace"],
       },
       boxShadow: {
-        stack: "3px 3px 0 0 rgba(28,33,41,0.08), 6px 6px 0 0 rgba(28,33,41,0.04)",
-        card: "0 1px 2px rgba(28,33,41,0.06), 0 8px 24px rgba(28,33,41,0.05)",
+        stack: "3px 3px 0 0 rgba(25,25,25,0.08), 6px 6px 0 0 rgba(25,25,25,0.04)",
+        card: "0 1px 2px rgba(25,25,25,0.06), 0 8px 24px rgba(25,25,25,0.05)",
       },
     },
   },

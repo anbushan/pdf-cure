@@ -22,7 +22,7 @@ export default function Page() {
       <Breadcrumbs
         items={[
           { label: "Home", href: "/" },
-          { label: tool.category, href: `/#${tool.category.toLowerCase()}`, categoryKey: CATEGORY_TKEY[tool.category] },
+          { label: tool.category, href: `/category/${tool.category.toLowerCase()}`, categoryKey: CATEGORY_TKEY[tool.category] },
           { label: tool.name, toolSlug: "translate" },
         ]}
       />

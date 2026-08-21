@@ -7,6 +7,7 @@ import { SITE_URL } from "@/lib/pageMetadata";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
 import type { TKey } from "@/lib/i18n/translations";
+import { localePath } from "@/lib/i18n/localePath";
 
 export interface Crumb {
   label: string; // English fallback, and what's used for JSON-LD (kept consistent for SEO)
@@ -25,7 +26,7 @@ export default function Breadcrumbs({ items }: { items: Crumb[] }) {
       "@type": "ListItem",
       position: i + 1,
       name: item.label,
-      ...(item.href ? { item: `${SITE_URL}${item.href}` } : {}),
+      ...(item.href ? { item: `${SITE_URL}${localePath(locale, item.href)}` } : {}),
     })),
   };
 
@@ -43,7 +44,7 @@ export default function Breadcrumbs({ items }: { items: Crumb[] }) {
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight size={12} className="text-ink-faint/50" />}
             {item.href ? (
-              <Link href={item.href} className="hover:text-ink transition-colors">
+              <Link href={localePath(locale, item.href)} className="hover:text-ink transition-colors">
                 {displayLabel(item)}
               </Link>
             ) : (

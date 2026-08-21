@@ -6,6 +6,7 @@ import { TOOLS, getTool } from "@/lib/toolsConfig";
 import { TOOL_ICONS } from "./toolIcons";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
+import { localePath } from "@/lib/i18n/localePath";
 
 /** Picks up to `count` other live tools, preferring the same category, to link to. */
 function pickRelated(currentSlug: string, count = 4) {
@@ -31,7 +32,7 @@ export default function RelatedTools({ slug }: { slug: string }) {
           return (
             <Link
               key={tool.slug}
-              href={`/tools/${tool.slug}`}
+              href={localePath(locale, `/tools/${tool.slug}`)}
               className="flex items-center gap-3 rounded-md border border-paper-line bg-white px-4 py-3 hover:border-ink-faint/40 transition-colors group"
             >
               {Icon && (

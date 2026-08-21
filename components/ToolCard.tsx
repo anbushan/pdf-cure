@@ -6,6 +6,7 @@ import { ToolMeta } from "@/lib/toolsConfig";
 import { TOOL_ICONS } from "./toolIcons";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
+import { localePath } from "@/lib/i18n/localePath";
 
 const accentMap = {
   amber: { bg: "bg-amber-light", text: "text-amber-dark" },
@@ -48,7 +49,7 @@ export default function ToolCard({ tool }: { tool: ToolMeta }) {
   }
 
   return (
-    <Link href={`/tools/${tool.slug}`} className="block h-full">
+    <Link href={localePath(locale, `/tools/${tool.slug}`)} className="block h-full">
       {card}
     </Link>
   );

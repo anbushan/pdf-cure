@@ -11,21 +11,22 @@ import ThemeToggle from "./ThemeToggle";
 import AuthButton from "./AuthButton";
 import NotificationBell from "./NotificationBell";
 import { useLanguage } from "./LanguageProvider";
+import { localePath } from "@/lib/i18n/localePath";
 
 export default function Header() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (pathname?.startsWith("/admin") || pathname?.startsWith("/account")) return null;
 
   const navLinks = [
-    { href: "/#ai",       label: t("catAI"),       className: "text-violet-dark font-medium hover:text-violet" },
-    { href: "/#organize", label: t("catOrganize"), className: "text-ink-faint hover:text-ink" },
-    { href: "/#convert",  label: t("catConvert"),  className: "text-ink-faint hover:text-ink" },
-    { href: "/#edit",     label: t("catEdit"),     className: "text-ink-faint hover:text-ink" },
-    { href: "/#security", label: t("catSecurity"), className: "text-ink-faint hover:text-ink" },
-    { href: "/pricing",   label: "Pricing",         className: "text-ink-faint hover:text-ink" },
+    { href: localePath(locale, "/category/ai"),       label: t("catAI"),       className: "text-violet-dark font-medium hover:text-violet" },
+    { href: localePath(locale, "/category/organize"), label: t("catOrganize"), className: "text-ink-faint hover:text-ink" },
+    { href: localePath(locale, "/category/convert"),  label: t("catConvert"),  className: "text-ink-faint hover:text-ink" },
+    { href: localePath(locale, "/category/edit"),     label: t("catEdit"),     className: "text-ink-faint hover:text-ink" },
+    { href: localePath(locale, "/category/security"), label: t("catSecurity"), className: "text-ink-faint hover:text-ink" },
+    { href: localePath(locale, "/pricing"),   label: "Pricing",         className: "text-ink-faint hover:text-ink" },
   ];
 
   return (
@@ -33,7 +34,7 @@ export default function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6 sm:py-3.5">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group shrink-0" onClick={() => setMobileOpen(false)}>
+        <Link href={localePath(locale, "/")} className="flex items-center gap-2 group shrink-0" onClick={() => setMobileOpen(false)}>
           <Image
             src="/brand/mark.png"
             alt="PDFCure"

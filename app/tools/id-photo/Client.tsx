@@ -8,6 +8,7 @@ import Dropzone from "@/components/Dropzone";
 import { ID_PHOTO_PRESETS, buildIdPhoto } from "@/lib/idPhoto";
 import { stripExt } from "@/lib/download";
 import { useErrorToast } from "@/components/useErrorToast";
+import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("id-photo")!;
 
@@ -56,6 +57,7 @@ export default function IdPhotoPage() {
     try {
       const blob = await buildIdPhoto(file, preset, fitMode, bgColor);
       saveAs(blob, `${stripExt(file.name)}_id_photo.png`);
+      trackEvent("tool_success", { page: "/tools/id-photo" });
     } catch (e: any) {
       setError(e?.message ?? "Couldn't generate the photo.");
     }

@@ -8,6 +8,7 @@ import { extractPdfText } from "@/lib/extractText";
 import { Send, RotateCcw, Sparkles } from "lucide-react";
 import { useErrorToast } from "@/components/useErrorToast";
 import AiDisclaimer from "@/components/AiDisclaimer";
+import { trackEvent } from "@/lib/analytics";
 
 const tool = getTool("ask")!;
 
@@ -67,6 +68,7 @@ export default function AskPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Something went wrong.");
       setTurns((prev) => [...prev, { role: "assistant", content: data.answer }]);
+      trackEvent("tool_success", { page: "/tools/ask" });
     } catch (e: any) {
       setError(e?.message ?? "Something went wrong.");
     } finally {

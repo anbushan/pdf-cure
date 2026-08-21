@@ -35,7 +35,8 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
   ],
   split: [
     { q: "What format do I use for page ranges?", a: "Comma-separated groups like 1-3,5,7-9. Each group becomes its own PDF, delivered together in a single zip." },
-    { q: "Can I split a PDF into individual single-page files?", a: "Yes — enter each page number separated by commas (e.g. 1,2,3,4) instead of ranges." },
+    { q: "Can I split a PDF into individual single-page files?", a: "Yes — enter each page number separated by commas (e.g. 1,2,3,4) instead of ranges, or switch to \"Every N pages\" and set it to 1." },
+    { q: "Can I split a long document into equal chunks without typing out every range?", a: "Yes — switch to \"Every N pages\" mode and enter how many pages each file should have; the last file just gets whatever pages are left over." },
   ],
   "remove-pages": [
     { q: "Can I remove non-consecutive pages?", a: "Yes — just tap each page thumbnail you want to delete; you're not limited to a single range." },
@@ -108,6 +109,12 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Can I control the order of the pages?", a: "Pages follow the order you add the images in — remove and re-add an image to move it." },
     { q: "Does this work for photos, screenshots, or scanned pages too?", a: "Yes — any image file works the same way, whether it's a photo, a screenshot, or a scan; each one becomes its own page in the PDF." },
   ],
+  "heic-to-pdf": [
+    { q: "Why can't I use the regular JPG to PDF tool for my iPhone photos?", a: "iPhones save photos as HEIC/HEIF by default, a format most browsers can't decode natively. This tool converts each photo to JPEG in your browser first, then builds the PDF the same way." },
+    { q: "Does this upload my photos anywhere?", a: "No — the HEIC decoding and PDF assembly both happen entirely on your device. Nothing is sent to a server." },
+    { q: "What about Live Photos or burst shots saved as HEIC?", a: "Only the first frame is used — Live Photo motion and extra burst frames aren't included in the PDF." },
+    { q: "Can I mix HEIC photos with regular JPG or PNG files?", a: "Not in this tool — add only HEIC/HEIF files here. To mix formats, convert your HEIC photos first, then use JPG to PDF with all of them together." },
+  ],
   "pdf-to-jpg": [
     { q: "What resolution are the exported images?", a: "Pages are rendered at 2x scale for a sharp result suitable for viewing or printing, then bundled into a single zip file." },
     { q: "Can I export just one page instead of the whole document?", a: "Not in this version — it currently exports every page. Use Extract pages first if you only need specific pages converted." },
@@ -169,6 +176,21 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "What is PDF metadata used for?", a: "It's the Title, Author, Subject, and Keywords stored inside the file itself — shown in a PDF viewer's document properties panel, used by search engines and file indexers, and sometimes required by submission portals (theses, compliance archives)." },
     { q: "Will this change how the PDF looks?", a: "No — metadata is invisible information about the file, not part of any page's content. Nothing on the pages themselves changes." },
     { q: "Can I clear a field instead of just changing it?", a: "Yes — empty a field and save; that removes it rather than leaving the old value." },
+  ],
+  "flatten-pdf": [
+    { q: "What does \"flatten\" actually do?", a: "It draws each form field's current value directly onto the page as permanent content, then deletes the underlying fields — so what you see is what's there, and it can no longer be typed into or edited as a form." },
+    { q: "Can I undo this afterward?", a: "No — flattening isn't reversible. Keep your original file if you might need to edit the form's values again later." },
+    { q: "What if my PDF doesn't have any form fields?", a: "There's nothing to flatten, and the tool will tell you rather than produce an unchanged file. If you filled a form in yourself, use Fill PDF Form instead — it has a \"flatten when done\" option built in." },
+  ],
+  "resize-pdf": [
+    { q: "Will this stretch or distort my pages?", a: "No — each page is scaled uniformly (the same factor on both axes) to fit within the target size, then centered, so proportions are preserved. That can leave a margin on two sides if the original's aspect ratio doesn't match the target." },
+    { q: "Does this crop or lose any content?", a: "No — the whole original page is scaled to fit, nothing is cropped off." },
+    { q: "Can I make pages bigger instead of smaller?", a: "Yes — pick any target size; pages scale up the same way they scale down." },
+  ],
+  "read-aloud": [
+    { q: "Does this upload my document anywhere?", a: "No — the PDF is read entirely in your browser, and playback uses your browser's own built-in voice engine. Nothing is sent to a server." },
+    { q: "Why do the available voices look different on my phone vs. computer?", a: "Voices come from your operating system and browser, not from this site — which ones are installed varies by device." },
+    { q: "Does this work on scanned PDFs?", a: "Only if the PDF has a selectable text layer to read from. Run OCR PDF first on a purely scanned document." },
   ],
   "id-photo": [
     { q: "Does this remove the background behind the person?", a: "No — it only crops and resizes the photo you upload onto a solid-color canvas, filling any leftover margin. It doesn't detect or remove what's already behind the subject in the original photo." },
@@ -239,6 +261,11 @@ const TOOL_FAQS: Record<string, FaqItem[]> = {
     { q: "Will headings, tables, and lists come out correctly?", a: "The tool infers structure from formatting cues — larger text becomes headings, aligned columns become table cells, and lines starting with bullets or numbers become lists. It works well on cleanly formatted documents; PDFs with unusual layouts may need light manual cleanup afterward." },
     { q: "Does this work on scanned PDFs?", a: "Only if the PDF has a selectable text layer. Purely scanned images with no OCR applied have no text to extract — run OCR PDF first." },
     { q: "Are links preserved?", a: "Yes — clickable links in the original PDF are carried over as Markdown links." },
+  ],
+  "pdf-to-text": [
+    { q: "Does this work on scanned PDFs?", a: "Only if the PDF already has a selectable text layer. A purely scanned image has no text to extract — run OCR PDF first, then convert the result." },
+    { q: "Will tables and columns come out in a readable order?", a: "Text is reconstructed line by line from each glyph's position on the page, so simple layouts read naturally. Multi-column pages and dense tables may interleave — for those, PDF to Markdown or PDF to Excel usually preserves structure better." },
+    { q: "What happens to images and formatting?", a: "Only text is extracted — no images, fonts, or layout. It's meant for quickly getting plain, copyable text out of a document." },
   ],
   "scan-to-pdf": [
     { q: "Do the photos I take get uploaded anywhere?", a: "Yes, briefly — unlike this app's other tools, which run entirely in your browser, the photos have to pass through our server to travel from your phone to your computer. They're deleted from the server the moment your computer retrieves them to build the PDF." },

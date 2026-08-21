@@ -102,6 +102,18 @@ export function parsePageList(input: string, totalPages: number): number[] {
 
 /* ---------------------------- Split ---------------------------- */
 
+/** Chunks a document's zero-indexed pages into consecutive groups of `size` (the last group may be smaller). */
+export function splitEveryNPages(totalPages: number, size: number): number[][] {
+  const groups: number[][] = [];
+  const step = Math.max(1, Math.floor(size));
+  for (let start = 0; start < totalPages; start += step) {
+    const group: number[] = [];
+    for (let i = start; i < Math.min(start + step, totalPages); i++) group.push(i);
+    groups.push(group);
+  }
+  return groups;
+}
+
 export async function splitByRanges(
   file: File,
   ranges: number[][]
@@ -348,6 +360,8 @@ export interface ImagePageOptions {
 const PAGE_SIZES: Record<string, [number, number]> = {
   a4: [595.28, 841.89],
   letter: [612, 792],
+  legal: [612, 1008],
+  a3: [841.89, 1190.55],
 };
 
 export async function buildPdfFromImages(
@@ -380,6 +394,58 @@ export async function buildPdfFromImages(
     }
   }
   return out.save();
+}
+
+/* ---------------------------- HEIC to PDF ---------------------------- */
+
+type Heic2AnyModule = typeof import("heic2any");
+
+let heic2anyPromise: Promise<Heic2AnyModule> | null = null;
+
+/** Lazily loads heic2any (bundles its own libheif wasm decoder) on first use. */
+function getHeic2any(): Promise<Heic2AnyModule> {
+  if (!heic2anyPromise) heic2anyPromise = import("heic2any");
+  return heic2anyPromise;
+}
+
+/**
+ * Converts a single iPhone HEIC/HEIF photo to a JPEG File, entirely
+ * client-side, so it can be previewed and then fed into
+ * buildPdfFromImages like any other image. Live Photos and burst shots
+ * can decode to multiple frames — only the first is used.
+ */
+export async function heicToJpegFile(file: File): Promise<File> {
+  const heic2any = (await getHeic2any()).default;
+  const result = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.92 });
+  const jpegBlob = Array.isArray(result) ? result[0] : result;
+  const name = file.name.replace(/\.(heic|heif)$/i, "") || file.name;
+  return new File([jpegBlob], `${name}.jpg`, { type: "image/jpeg" });
+}
+
+/* ---------------------------- Resize page size ---------------------------- */
+
+export type PageSizeTarget = "a4" | "letter" | "legal" | "a3";
+
+/**
+ * Rescales every page to a standard target size, uniformly (never
+ * stretched) so nothing looks distorted, and centered within the new
+ * page box with whatever margin that leaves.
+ */
+export async function resizePdf(file: File, target: PageSizeTarget): Promise<Uint8Array> {
+  const doc = await loadDoc(file);
+  const [targetW, targetH] = PAGE_SIZES[target];
+
+  for (const page of doc.getPages()) {
+    const { width, height } = page.getSize();
+    const scale = Math.min(targetW / width, targetH / height);
+    page.scale(scale, scale);
+    const scaledW = width * scale;
+    const scaledH = height * scale;
+    page.setSize(targetW, targetH);
+    page.translateContent((targetW - scaledW) / 2, (targetH - scaledH) / 2);
+  }
+
+  return doc.save();
 }
 
 /* ---------------------------- Signing ---------------------------- */
@@ -630,6 +696,20 @@ export async function fillPdfForm(
   // submission-ready copy (e.g. a signed loan form).
   if (opts.flatten) form.flatten();
 
+  return doc.save();
+}
+
+/**
+ * Bakes a PDF's fillable form fields into permanent page content and
+ * removes the underlying fields, so the values can no longer be edited —
+ * for a PDF that was already filled out (elsewhere, or by someone else)
+ * and just needs to become a static, submission-ready copy.
+ */
+export async function flattenPdf(file: File): Promise<Uint8Array> {
+  const doc = await loadDoc(file);
+  const form = doc.getForm();
+  if (form.getFields().length === 0) throw new Error("This PDF doesn't have any fillable form fields to flatten.");
+  form.flatten();
   return doc.save();
 }
 
@@ -1740,6 +1820,60 @@ export async function pdfToMarkdown(file: File): Promise<string> {
   }
 
   return pageBlocks.join("\n\n---\n\n") + "\n";
+}
+
+/* ---------------------------- PDF to Text ---------------------------- */
+
+/**
+ * Pulls the plain, copyable text out of every page, with line breaks
+ * reconstructed from each glyph run's position (pdf.js hands back a flat
+ * list of text runs with no notion of "line" of its own). No markdown
+ * structure is inferred — that's what pdfToMarkdown is for — this is a
+ * straight, readable text dump for pasting elsewhere or saving as .txt.
+ */
+/**
+ * Returns each page's plain, line-reconstructed text separately (rather
+ * than one joined document) — used directly by pdfToText below, and by
+ * Read PDF Aloud, which reads and highlights a page at a time.
+ */
+export async function extractPagesText(file: File): Promise<string[]> {
+  const pdfjsLib = await getPdfjs();
+  const data = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
+
+  const pages: string[] = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const textContent = await page.getTextContent();
+    const items = (textContent.items as any[])
+      .filter((it) => typeof it.str === "string")
+      .map((it) => ({ text: it.str as string, x: it.transform[4] as number, y: it.transform[5] as number }));
+
+    // Group into lines, top-to-bottom then left-to-right (PDF y grows upward),
+    // the same bucketing pdfToMarkdown uses.
+    items.sort((a, b) => b.y - a.y || a.x - b.x);
+    const lines: string[] = [];
+    let current: string[] = [];
+    let lastY: number | null = null;
+    for (const it of items) {
+      if (lastY !== null && Math.abs(lastY - it.y) > 3) {
+        lines.push(current.join(" ").replace(/\s+/g, " ").trim());
+        current = [];
+      }
+      if (it.text) current.push(it.text);
+      lastY = it.y;
+    }
+    if (current.length) lines.push(current.join(" ").replace(/\s+/g, " ").trim());
+
+    pages.push(lines.filter(Boolean).join("\n"));
+  }
+
+  return pages;
+}
+
+export async function pdfToText(file: File): Promise<string> {
+  const pages = await extractPagesText(file);
+  return pages.join("\n\n").trim() + "\n";
 }
 
 /* ---------------------------- PDF to PDF/A ---------------------------- */

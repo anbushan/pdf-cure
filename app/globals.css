@@ -2,58 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Palette below matches Smallpdf's own site (colors pulled directly from
+ * their production CSS): white background, near-black neutral text, and
+ * one dominant blue as the primary/CTA color, with teal/red/violet as
+ * supporting accents — the same pattern Smallpdf itself uses (blue for
+ * the brand and buttons, other hues for icons and status). The variable
+ * names below (amber/teal/rust/violet) are unchanged from before this
+ * pass — they're load-bearing across ~50 components via Tailwind classes
+ * like bg-amber and text-rust-dark — only their underlying values moved
+ * from a warm "paper" palette to this one. "amber" is now a blue; a
+ * follow-up rename (amber→primary, rust→error, etc.) would make that
+ * honest, but touches every one of those call sites, so it's deliberately
+ * left for later rather than folded into this change.
+ */
 :root {
-  --color-ink: 28 33 41;
-  --color-ink-soft: 44 51 64;
-  --color-ink-faint: 84 92 107;
-  --color-paper: 250 248 243;
-  --color-paper-dim: 241 237 227;
-  --color-paper-line: 228 223 210;
-  --color-amber: 226 163 61;
-  --color-amber-dark: 198 133 42;
-  --color-amber-light: 243 216 163;
-  --color-teal: 63 117 104;
-  --color-teal-dark: 46 90 80;
-  --color-teal-light: 207 227 221;
-  --color-rust: 193 80 46;
-  --color-rust-dark: 156 62 34;
-  --color-rust-light: 240 210 198;
-  --color-violet: 110 86 201;
-  --color-violet-dark: 86 66 166;
-  --color-violet-light: 223 216 245;
+  --color-ink: 25 25 25;
+  --color-ink-soft: 60 60 64;
+  --color-ink-faint: 110 110 116;
+  --color-paper: 255 255 255;
+  --color-paper-dim: 247 247 249;
+  --color-paper-line: 229 229 234;
+  --color-amber: 61 153 245;
+  --color-amber-dark: 0 72 217;
+  --color-amber-light: 214 234 253;
+  --color-teal: 15 192 197;
+  --color-teal-dark: 11 148 152;
+  --color-teal-light: 209 244 245;
+  --color-rust: 242 48 48;
+  --color-rust-dark: 196 30 30;
+  --color-rust-light: 253 219 219;
+  --color-violet: 121 97 242;
+  --color-violet-dark: 92 68 217;
+  --color-violet-light: 225 219 253;
 
-  --card-bg: 255 254 251;
+  --card-bg: 255 255 255;
   --card-border: var(--color-paper-line);
   --card-fold: var(--color-paper-dim);
-  --dropzone-border: 207 199 178;
-  --dropzone-tint: 28 33 41;
+  --dropzone-border: 214 214 219;
+  --dropzone-tint: 25 25 25;
 }
 
 .dark {
-  --color-ink: 240 238 232;
-  --color-ink-soft: 214 210 200;
-  --color-ink-faint: 158 152 140;
-  --color-paper: 22 21 19;
-  --color-paper-dim: 32 31 28;
-  --color-paper-line: 54 52 47;
-  --color-amber: 226 163 61;
-  --color-amber-dark: 240 184 96;
-  --color-amber-light: 58 46 21;
-  --color-teal: 110 176 158;
-  --color-teal-dark: 148 205 187;
-  --color-teal-light: 24 42 38;
-  --color-rust: 219 122 90;
-  --color-rust-dark: 236 150 120;
-  --color-rust-light: 46 27 21;
-  --color-violet: 165 148 232;
-  --color-violet-dark: 190 176 240;
-  --color-violet-light: 40 34 63;
+  --color-ink: 240 240 242;
+  --color-ink-soft: 200 200 206;
+  --color-ink-faint: 140 140 148;
+  --color-paper: 18 18 20;
+  --color-paper-dim: 28 28 31;
+  --color-paper-line: 45 45 50;
+  --color-amber: 100 176 250;
+  --color-amber-dark: 150 200 253;
+  --color-amber-light: 20 40 63;
+  --color-teal: 61 212 216;
+  --color-teal-dark: 124 224 227;
+  --color-teal-light: 18 50 52;
+  --color-rust: 255 107 107;
+  --color-rust-dark: 255 148 148;
+  --color-rust-light: 61 20 20;
+  --color-violet: 156 140 245;
+  --color-violet-dark: 188 176 248;
+  --color-violet-light: 38 32 74;
 
-  --card-bg: 30 29 26;
+  --card-bg: 24 24 27;
   --card-border: var(--color-paper-line);
-  --card-fold: 38 37 33;
-  --dropzone-border: 68 65 57;
-  --dropzone-tint: 240 238 232;
+  --card-fold: 32 32 36;
+  --dropzone-border: 55 55 60;
+  --dropzone-tint: 240 240 242;
 }
 
 html {
@@ -71,7 +85,7 @@ body {
 }
 
 .dark ::selection {
-  color: rgb(22 21 19);
+  color: rgb(18 18 20);
 }
 
 /* Signature element: a paper-stack card with a folded top-right corner.
