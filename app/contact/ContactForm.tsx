@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send, Check } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ContactForm() {
   const { t } = useLanguage();
@@ -29,6 +30,7 @@ export default function ContactForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("contactError"));
       setSent(true);
+      trackEvent("contact_submitted");
     } catch (e: any) {
       setError(e?.message ?? t("contactError"));
     } finally {

@@ -13,6 +13,8 @@ const accentMap = {
   teal: { bg: "bg-teal-light", text: "text-teal-dark" },
   rust: { bg: "bg-rust-light", text: "text-rust-dark" },
   violet: { bg: "bg-violet-light", text: "text-violet-dark" },
+  green: { bg: "bg-green-light", text: "text-green-dark" },
+  orange: { bg: "bg-orange-light", text: "text-orange-dark" },
 };
 
 export default function ToolCard({ tool }: { tool: ToolMeta }) {

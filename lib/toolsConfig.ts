@@ -14,7 +14,7 @@ export interface ToolMeta {
   description: string;
   category: ToolCategory;
   status: ToolStatus;
-  accent: "amber" | "teal" | "rust" | "violet";
+  accent: "amber" | "teal" | "rust" | "violet" | "green" | "orange";
   /** why it's not live yet, shown on the "soon" badge tooltip */
   soonReason?: string;
 }
@@ -40,11 +40,11 @@ export const TOOLS: ToolMeta[] = [
   { slug: "batch", name: "Batch Process PDFs", description: "Compress, watermark, protect, or unlock many PDFs at once, delivered together in a zip.", category: "Organize", status: "live", accent: "teal" },
 
   // Optimize
-  { slug: "compress", name: "Compress PDF", description: "Shrink file size by re-encoding page images.", category: "Optimize", status: "live", accent: "amber" },
-  { slug: "compress-to-size", name: "Compress to Target Size", description: "Shrink a PDF down until it fits under a size you choose — for email or upload limits.", category: "Optimize", status: "live", accent: "amber" },
-  { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "live", accent: "amber" },
-  { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "live", accent: "amber" },
-  { slug: "accessibility-checker", name: "Accessibility Checker", description: "Scan a PDF for the concrete things that block screen readers — missing tags, no language, no title, and more.", category: "Optimize", status: "live", accent: "amber" },
+  { slug: "compress", name: "Compress PDF", description: "Shrink file size by re-encoding page images.", category: "Optimize", status: "live", accent: "green" },
+  { slug: "compress-to-size", name: "Compress to Target Size", description: "Shrink a PDF down until it fits under a size you choose — for email or upload limits.", category: "Optimize", status: "live", accent: "green" },
+  { slug: "repair", name: "Repair PDF", description: "Attempt to rebuild a damaged PDF.", category: "Optimize", status: "live", accent: "green" },
+  { slug: "ocr", name: "OCR PDF", description: "Make scanned PDFs searchable and selectable.", category: "Optimize", status: "live", accent: "green" },
+  { slug: "accessibility-checker", name: "Accessibility Checker", description: "Scan a PDF for the concrete things that block screen readers — missing tags, no language, no title, and more.", category: "Optimize", status: "live", accent: "green" },
 
   // Convert
   { slug: "jpg-to-pdf", name: "JPG to PDF", description: "Turn images into a PDF in seconds.", category: "Convert", status: "live", accent: "amber" },
@@ -64,21 +64,21 @@ export const TOOLS: ToolMeta[] = [
   { slug: "bank-statement-to-excel", name: "Bank Statement to Excel", description: "Turn a bank statement PDF into a clean spreadsheet with date, description, debit, credit, and balance columns.", category: "Convert", status: "live", accent: "amber" },
 
   // Edit
-  { slug: "watermark", name: "Watermark", description: "Stamp text over every page.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "page-numbers", name: "Page numbers", description: "Add page numbers with your choice of position.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "rotate", name: "Rotate PDF", description: "Rotate one page or the whole document.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "crop", name: "Crop PDF", description: "Trim margins from every page.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "add-image", name: "Add Image to PDF", description: "Place a photo or logo onto a page — drag it into position, resize it, and it's fit to the page automatically.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "image-watermark", name: "Image Watermark", description: "Stamp a logo or image across every page, with adjustable opacity and size.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "add-qrcode", name: "Add QR Code to PDF", description: "Generate a QR code from a link or text and place it on a page.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "add-text", name: "Add Text to PDF", description: "Type free-form text directly onto a page — for filling in a blank on a scanned form or adding a note.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "fill-form", name: "Fill PDF Form", description: "Fill out a fillable PDF's own form fields — text, checkboxes, and dropdowns — and download it.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "highlight-pdf", name: "Highlight & Annotate PDF", description: "Highlight text and add sticky-note comments directly on a page.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "id-photo", name: "ID Photo Maker", description: "Crop and resize a photo to a standard passport or ID size with a solid background.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "edit-metadata", name: "Edit PDF Metadata", description: "Set a PDF's title, author, subject, and keywords.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "flatten-pdf", name: "Flatten PDF", description: "Bake a filled-out form's values into the page permanently, so it can no longer be edited.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "resize-pdf", name: "Resize PDF Pages", description: "Rescale every page to a standard size like A4, Letter, Legal, or A3.", category: "Edit", status: "live", accent: "rust" },
-  { slug: "read-aloud", name: "Read PDF Aloud", description: "Listen to a document read aloud using your browser's built-in voice, page by page.", category: "Edit", status: "live", accent: "rust" },
+  { slug: "watermark", name: "Watermark", description: "Stamp text over every page.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "page-numbers", name: "Page numbers", description: "Add page numbers with your choice of position.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "rotate", name: "Rotate PDF", description: "Rotate one page or the whole document.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "crop", name: "Crop PDF", description: "Trim margins from every page.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "add-image", name: "Add Image to PDF", description: "Place a photo or logo onto a page — drag it into position, resize it, and it's fit to the page automatically.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "image-watermark", name: "Image Watermark", description: "Stamp a logo or image across every page, with adjustable opacity and size.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "add-qrcode", name: "Add QR Code to PDF", description: "Generate a QR code from a link or text and place it on a page.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "add-text", name: "Add Text to PDF", description: "Type free-form text directly onto a page — for filling in a blank on a scanned form or adding a note.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "fill-form", name: "Fill PDF Form", description: "Fill out a fillable PDF's own form fields — text, checkboxes, and dropdowns — and download it.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "highlight-pdf", name: "Highlight & Annotate PDF", description: "Highlight text and add sticky-note comments directly on a page.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "id-photo", name: "ID Photo Maker", description: "Crop and resize a photo to a standard passport or ID size with a solid background.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "edit-metadata", name: "Edit PDF Metadata", description: "Set a PDF's title, author, subject, and keywords.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "flatten-pdf", name: "Flatten PDF", description: "Bake a filled-out form's values into the page permanently, so it can no longer be edited.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "resize-pdf", name: "Resize PDF Pages", description: "Rescale every page to a standard size like A4, Letter, Legal, or A3.", category: "Edit", status: "live", accent: "orange" },
+  { slug: "read-aloud", name: "Read PDF Aloud", description: "Listen to a document read aloud using your browser's built-in voice, page by page.", category: "Edit", status: "live", accent: "orange" },
 
   // Security
   { slug: "sign", name: "Sign PDF", description: "Draw or type a signature and place it on the page.", category: "Security", status: "live", accent: "rust" },

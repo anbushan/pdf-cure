@@ -39,6 +39,16 @@ const config: Config = {
           dark: "rgb(var(--color-violet-dark) / <alpha-value>)",
           light: "rgb(var(--color-violet-light) / <alpha-value>)",
         },
+        green: {
+          DEFAULT: "rgb(var(--color-green) / <alpha-value>)",
+          dark: "rgb(var(--color-green-dark) / <alpha-value>)",
+          light: "rgb(var(--color-green-light) / <alpha-value>)",
+        },
+        orange: {
+          DEFAULT: "rgb(var(--color-orange) / <alpha-value>)",
+          dark: "rgb(var(--color-orange-dark) / <alpha-value>)",
+          light: "rgb(var(--color-orange-light) / <alpha-value>)",
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "sans-serif"],

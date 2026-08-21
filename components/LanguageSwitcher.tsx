@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Globe } from "lucide-react";
 import { LOCALES } from "@/lib/i18n/locales";
 import { useLanguage } from "./LanguageProvider";
+import { trackEvent } from "@/lib/analytics";
 
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useLanguage();
@@ -36,6 +37,7 @@ export default function LanguageSwitcher() {
             <button
               key={l.code}
               onClick={() => {
+                if (l.code !== locale) trackEvent("language_changed", { locale: l.code, previous_locale: locale });
                 setLocale(l.code);
                 setOpen(false);
               }}

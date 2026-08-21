@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FileText, Image as ImageIcon, File as FileIcon } from "lucide-react";
 import { formatBytes } from "@/lib/download";
+import PdfThumbStrip from "./PdfThumbStrip";
+import { useLanguage } from "./LanguageProvider";
 
 interface FilePreviewProps {
   file: File;
@@ -17,6 +19,7 @@ interface FilePreviewProps {
  * Used by every tool's "file selected" state in place of a bare filename.
  */
 export default function FilePreview({ file, className }: FilePreviewProps) {
+  const { t } = useLanguage();
   const [thumb, setThumb] = useState<string | null>(null);
   const [pageCount, setPageCount] = useState<number | null>(null);
 
@@ -53,22 +56,29 @@ export default function FilePreview({ file, className }: FilePreviewProps) {
   const Icon = file.type === "application/pdf" ? FileText : file.type.startsWith("image/") ? ImageIcon : FileIcon;
 
   return (
-    <div className={`flex items-center gap-3 rounded-md border border-paper-line bg-paper-dim/40 p-3 ${className ?? ""}`}>
-      {thumb ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={thumb} alt="" className="h-16 w-12 shrink-0 rounded-sm border border-paper-line bg-white object-cover" />
-      ) : (
-        <span className="flex h-16 w-12 shrink-0 items-center justify-center rounded-sm border border-paper-line bg-white text-ink-faint">
-          <Icon size={20} />
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{file.name}</p>
-        <p className="mt-0.5 text-xs text-ink-faint">
-          {formatBytes(file.size)}
-          {pageCount ? ` · ${pageCount} page${pageCount === 1 ? "" : "s"}` : ""}
-        </p>
+    <div className={`rounded-md border border-paper-line bg-paper-dim/40 p-3 ${className ?? ""}`}>
+      <div className="flex items-center gap-3">
+        {thumb ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumb} alt="" className="h-16 w-12 shrink-0 rounded-sm border border-paper-line bg-white object-cover" />
+        ) : (
+          <span className="flex h-16 w-12 shrink-0 items-center justify-center rounded-sm border border-paper-line bg-white text-ink-faint">
+            <Icon size={20} />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-ink">{file.name}</p>
+          <p className="mt-0.5 text-xs text-ink-faint">
+            {formatBytes(file.size)}
+            {pageCount ? ` · ${pageCount} page${pageCount === 1 ? "" : "s"}` : ""}
+          </p>
+        </div>
       </div>
+      {/* A single-page PDF is already fully shown by the thumbnail above — the
+          strip only adds real value once there's more than one page to see. */}
+      {file.type === "application/pdf" && pageCount !== null && pageCount > 1 && (
+        <PdfThumbStrip source={file} label={t("viewOriginal")} />
+      )}
     </div>
   );
 }

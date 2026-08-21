@@ -6,6 +6,7 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { LogOut, Sparkle, UserCircle } from "lucide-react";
 import ConfirmDialog from "./ConfirmDialog";
 import FreeBadge from "./FreeBadge";
+import { trackEvent } from "@/lib/analytics";
 
 function GoogleMark() {
   return (
@@ -59,7 +60,10 @@ export default function AuthButton() {
   if (!session) {
     return (
       <button
-        onClick={() => signIn("google")}
+        onClick={() => {
+          trackEvent("sign_in_started", { provider: "google" });
+          signIn("google");
+        }}
         className="inline-flex items-center gap-1.5 rounded-md border border-paper-line px-3 py-1.5 text-sm font-medium text-ink-faint hover:text-ink hover:border-ink-faint/40 transition-colors"
       >
         <GoogleMark /> <span className="hidden sm:inline">Sign in</span>
@@ -130,6 +134,7 @@ export default function AuthButton() {
         confirmLabel="Log out"
         onConfirm={() => {
           setConfirmingLogout(false);
+          trackEvent("sign_out");
           signOut({ callbackUrl: "/" });
         }}
         onCancel={() => setConfirmingLogout(false)}

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
 import { MessageSquarePlus, X, Check } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
+import { trackEvent } from "@/lib/analytics";
 
 export default function FeedbackButton() {
   const { t } = useLanguage();
@@ -66,6 +67,7 @@ export default function FeedbackButton() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? t("feedbackErrorEmpty"));
       setSent(true);
+      trackEvent("feedback_submitted", { type: TYPES[typeIdx].value, page: pathname });
     } catch (e: any) {
       setError(e?.message ?? t("feedbackErrorEmpty"));
     } finally {

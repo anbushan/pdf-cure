@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { saveAs } from "file-saver";
 import { GripVertical, X, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { getTool } from "@/lib/toolsConfig";
 import ToolHeader from "@/components/ToolHeader";
@@ -101,7 +102,6 @@ export default function BatchPage() {
     const successes = (results ?? []).filter((r) => r.status === "done" && r.bytes) as (ResultItem & { bytes: Uint8Array })[];
     if (successes.length === 0) return;
     const { default: JSZip } = await import("jszip");
-    const { saveAs } = await import("file-saver");
     const zip = new JSZip();
     successes.forEach((r) => zip.file(`${stripExt(r.name)}${SUFFIX[operation]}.pdf`, r.bytes));
     const blob = await zip.generateAsync({ type: "blob" });

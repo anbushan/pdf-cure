@@ -8,6 +8,7 @@ import { TOOLS } from "@/lib/toolsConfig";
 import { TOOL_ICONS } from "./toolIcons";
 import { useLanguage } from "./LanguageProvider";
 import { getToolLabel } from "@/lib/i18n/toolTranslations";
+import { trackEvent } from "@/lib/analytics";
 
 const LIVE_TOOLS = TOOLS.filter((t) => t.status === "live");
 
@@ -44,6 +45,7 @@ export default function QuickSearch() {
   }
 
   function go(slug: string) {
+    if (query.trim()) trackEvent("search", { search_term: query.trim(), selected_tool: slug });
     router.push(`/tools/${slug}`);
     close();
   }

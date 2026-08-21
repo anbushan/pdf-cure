@@ -26,7 +26,6 @@ export default function Header() {
     { href: localePath(locale, "/category/convert"),  label: t("catConvert"),  className: "text-ink-faint hover:text-ink" },
     { href: localePath(locale, "/category/edit"),     label: t("catEdit"),     className: "text-ink-faint hover:text-ink" },
     { href: localePath(locale, "/category/security"), label: t("catSecurity"), className: "text-ink-faint hover:text-ink" },
-    { href: localePath(locale, "/pricing"),   label: "Pricing",         className: "text-ink-faint hover:text-ink" },
   ];
 
   return (
