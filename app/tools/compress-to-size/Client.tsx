@@ -47,7 +47,7 @@ export default function CompressToSizePage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result.bytes}
             title={result.achieved ? `Fits under ${targetMb} MB` : `Couldn't get under ${targetMb} MB`}
             detail={`${formatBytes(result.originalSize)} → ${formatBytes(result.newSize)}${
               result.achieved ? "" : " — this is as small as it gets without losing too much"

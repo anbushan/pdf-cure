@@ -44,7 +44,7 @@ export default function RepairPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result.bytes}
             title={result.pagesRecovered < result.totalPages ? `Recovered ${result.pagesRecovered} of ${result.totalPages} pages` : "PDF rebuilt successfully"}
             detail={
               result.usedImageFallback

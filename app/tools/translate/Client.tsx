@@ -81,7 +81,7 @@ export default function TranslateClient() {
       <div className="mx-auto max-w-2xl px-6 mt-8">
         {result ? (
           <>
-            <ResultPanel
+            <ResultPanel previewBytes={result}
               title="Translation complete"
               detail={truncated ? "This document was long, so the translation covers the first portion of the text." : undefined}
               onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_translated.pdf`)}

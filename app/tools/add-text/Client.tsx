@@ -71,7 +71,7 @@ export default function AddTextPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Text added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_text.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Text added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_text.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
         ) : loading ? (

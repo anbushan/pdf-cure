@@ -72,7 +72,7 @@ export default function AiHtmlToPdfClient() {
       <div className="mx-auto max-w-2xl px-6 mt-8">
         {result ? (
           <>
-            <ResultPanel title="Your PDF is ready" onDownload={() => downloadPdf(result, "converted.pdf")} onReset={reset} />
+            <ResultPanel previewBytes={result} title="Your PDF is ready" onDownload={() => downloadPdf(result, "converted.pdf")} onReset={reset} />
             <AiDisclaimer />
           </>
         ) : busy ? (

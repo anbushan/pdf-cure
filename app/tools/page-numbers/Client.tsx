@@ -55,7 +55,7 @@ export default function PageNumbersPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Page numbers added"
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_numbered.pdf`)}
             onReset={reset}

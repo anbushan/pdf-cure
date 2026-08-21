@@ -44,7 +44,7 @@ export default function PowerpointToPdfClient() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Your PDF is ready" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Your PDF is ready" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept=".pptx" label="Select a .pptx file" hint="Only the .pptx format is supported (not the older .ppt)" onFiles={(f) => setFile(f[0])} />
         ) : (

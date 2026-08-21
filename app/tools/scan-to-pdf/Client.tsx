@@ -117,7 +117,7 @@ export default function ScanToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {phase === "done" && result ? (
-          <ResultPanel title="Your scan is ready" onDownload={() => downloadPdf(result, "scan.pdf")} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Your scan is ready" onDownload={() => downloadPdf(result, "scan.pdf")} onReset={reset} />
         ) : phase === "assembling" ? (
           <div className="paper-stack p-10 text-center">
             <FileImage className="mx-auto text-amber-dark animate-pulse" size={22} />

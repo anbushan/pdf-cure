@@ -67,7 +67,7 @@ export default function EditMetadataPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Metadata updated" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_updated.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Metadata updated" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_updated.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={handleFile} />
         ) : loadingMeta ? (

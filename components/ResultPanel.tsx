@@ -7,6 +7,7 @@ import { CheckCircle2, RotateCcw, Download, Sparkle } from "lucide-react";
 import { useLanguage } from "./LanguageProvider";
 import { useToast } from "./ToastProvider";
 import { trackEvent } from "@/lib/analytics";
+import PdfResultPreview from "./PdfResultPreview";
 
 interface ResultPanelProps {
   title: string;
@@ -14,9 +15,11 @@ interface ResultPanelProps {
   onDownload: () => void;
   onReset: () => void;
   downloadLabel?: string;
+  /** The result's raw PDF bytes, if it's a plain PDF — renders a page-thumbnail preview above the buttons so it can be reviewed before downloading. Omit for non-PDF results (zip, docx, xlsx, etc.). */
+  previewBytes?: Uint8Array;
 }
 
-export default function ResultPanel({ title, detail, onDownload, onReset, downloadLabel }: ResultPanelProps) {
+export default function ResultPanel({ title, detail, onDownload, onReset, downloadLabel, previewBytes }: ResultPanelProps) {
   const { t } = useLanguage();
   const toast = useToast();
   const pathname = usePathname();
@@ -64,6 +67,8 @@ export default function ResultPanel({ title, detail, onDownload, onReset, downlo
           {detail}
         </span>
       )}
+
+      {previewBytes && <PdfResultPreview bytes={previewBytes} />}
 
       <div className="mt-7 flex flex-col items-center gap-3">
         <button

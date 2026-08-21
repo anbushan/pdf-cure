@@ -69,7 +69,7 @@ export default function OcrPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="PDF is now searchable"
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_ocr.pdf`)}
             onReset={reset}

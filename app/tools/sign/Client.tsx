@@ -58,7 +58,7 @@ export default function SignPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Signature added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_signed.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Signature added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_signed.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF to sign" onFiles={(f) => setFile(f[0])} />
         ) : loading ? (

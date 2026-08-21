@@ -61,7 +61,7 @@ export default function MergePage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your merged PDF is ready"
             detail={`${files.length} files combined · ${formatBytes(result.byteLength)}`}
             onDownload={() => downloadPdf(result, "merged.pdf")}

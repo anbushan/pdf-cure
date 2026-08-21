@@ -52,7 +52,7 @@ export default function ResizePdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your PDF has been resized"
             detail={`Every page rescaled to ${target.toUpperCase()}`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_${target}.pdf`)}

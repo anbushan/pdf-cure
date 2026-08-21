@@ -68,7 +68,7 @@ export default function ProtectClient() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your PDF is protected"
             detail="Encrypted with AES-256 — anyone opening it will need the password you set."
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_protected.pdf`)}

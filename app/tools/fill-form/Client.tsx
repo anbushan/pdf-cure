@@ -86,7 +86,7 @@ export default function FillFormPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Form filled" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_filled.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Form filled" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_filled.pdf`)} onReset={reset} />
         ) : !file ? (
           <>
             <Dropzone accept="application/pdf" label="Select a PDF form" onFiles={handleFile} />

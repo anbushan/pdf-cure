@@ -71,7 +71,7 @@ export default function RedactPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Redactions applied"
             detail={`${boxes.length} area${boxes.length === 1 ? "" : "s"} permanently blacked out`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_redacted.pdf`)}

@@ -44,7 +44,7 @@ export default function WordToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Your document has been converted" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Your document has been converted" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept=".docx" label="Select a .docx file" hint="Only the .docx format is supported (not the older .doc)" onFiles={(f) => setFile(f[0])} />
         ) : (

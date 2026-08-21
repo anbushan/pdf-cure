@@ -44,7 +44,7 @@ export default function PdfToPdfAPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Converted to PDF/A"
             onDownload={() => downloadBytes(result, `${stripExt(file!.name)}_pdfa.pdf`, "application/pdf")}
             onReset={reset}

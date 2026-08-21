@@ -47,7 +47,7 @@ export default function CropPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your PDF has been cropped"
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_cropped.pdf`)}
             onReset={reset}

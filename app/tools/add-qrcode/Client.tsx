@@ -87,7 +87,7 @@ export default function AddQrCodePage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="QR code added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_qrcode.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="QR code added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_qrcode.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
         ) : loading ? (

@@ -81,7 +81,7 @@ export default function HeicToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your photos have been converted"
             detail={`${readyFiles.length} page${readyFiles.length === 1 ? "" : "s"}`}
             onDownload={() => downloadPdf(result, "photos.pdf")}

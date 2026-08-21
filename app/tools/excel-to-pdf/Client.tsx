@@ -44,7 +44,7 @@ export default function ExcelToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Your spreadsheet has been converted" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Your spreadsheet has been converted" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept=".xlsx,.xls,.csv" label="Select a spreadsheet" hint=".xlsx, .xls, or .csv" onFiles={(f) => setFile(f[0])} />
         ) : (

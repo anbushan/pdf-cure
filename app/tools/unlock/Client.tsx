@@ -52,7 +52,7 @@ export default function UnlockClient() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Password removed"
             detail="This PDF now opens without a password."
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_unlocked.pdf`)}

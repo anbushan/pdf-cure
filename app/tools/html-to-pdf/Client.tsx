@@ -49,7 +49,7 @@ export default function HtmlToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-2xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Your HTML has been converted" onDownload={() => downloadPdf(result, "converted.pdf")} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Your HTML has been converted" onDownload={() => downloadPdf(result, "converted.pdf")} onReset={reset} />
         ) : (
           <div className="paper-stack p-6">
             <div className="flex items-center justify-between">

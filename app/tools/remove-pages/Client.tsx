@@ -57,7 +57,7 @@ export default function RemovePagesPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Pages removed"
             detail={`${selected.size} page${selected.size === 1 ? "" : "s"} deleted`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_edited.pdf`)}

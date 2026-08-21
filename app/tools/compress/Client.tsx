@@ -53,7 +53,7 @@ export default function CompressPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result.bytes}
             title={savings > 0 ? `Reduced by ${savings}%` : "Compression complete"}
             detail={`${formatBytes(result.originalSize)} → ${formatBytes(result.newSize)}`}
             onDownload={() => downloadPdf(result.bytes, `${stripExt(file!.name)}_compressed.pdf`)}

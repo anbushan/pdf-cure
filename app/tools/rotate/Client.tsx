@@ -48,7 +48,7 @@ export default function RotatePage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your PDF has been rotated"
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_rotated.pdf`)}
             onReset={reset}

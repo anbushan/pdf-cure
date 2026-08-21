@@ -58,7 +58,7 @@ export default function ExtractPagesPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Pages extracted"
             detail={`${selected.size} page${selected.size === 1 ? "" : "s"} pulled into a new PDF`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_extract.pdf`)}

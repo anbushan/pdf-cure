@@ -114,7 +114,7 @@ export default function HighlightPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Annotations added"
             detail={`${highlights.length} highlight${highlights.length === 1 ? "" : "s"}, ${comments.length} comment${comments.length === 1 ? "" : "s"}`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_annotated.pdf`)}

@@ -83,7 +83,7 @@ export default function OrganizePdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your PDF has been reorganized"
             detail={`${items.length} pages`}
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_organized.pdf`)}

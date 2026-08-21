@@ -55,7 +55,7 @@ export default function WatermarkPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Watermark applied"
             onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_watermarked.pdf`)}
             onReset={reset}

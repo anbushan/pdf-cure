@@ -52,7 +52,7 @@ export default function JpgToPdfPage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-3xl px-6 mt-8">
         {result ? (
-          <ResultPanel
+          <ResultPanel previewBytes={result}
             title="Your images have been converted"
             detail={`${files.length} page${files.length === 1 ? "" : "s"}`}
             onDownload={() => downloadPdf(result, "images.pdf")}

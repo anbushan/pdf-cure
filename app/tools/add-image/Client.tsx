@@ -79,7 +79,7 @@ export default function AddImagePage() {
       <ToolHeader tool={tool} />
       <div className="mx-auto max-w-xl px-6 mt-8">
         {result ? (
-          <ResultPanel title="Image added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_image.pdf`)} onReset={reset} />
+          <ResultPanel previewBytes={result} title="Image added" onDownload={() => downloadPdf(result, `${stripExt(file!.name)}_image.pdf`)} onReset={reset} />
         ) : !file ? (
           <Dropzone accept="application/pdf" label="Select a PDF" onFiles={(f) => setFile(f[0])} />
         ) : loading ? (
